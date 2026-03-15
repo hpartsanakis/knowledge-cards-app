@@ -19,7 +19,17 @@ const cards = [
     content: "display:flex helps align items in rows or columns.",
   },
 ];
+
 const cardsContainer = document.getElementById("cardsContainer");
+const addCardBtn = document.getElementById("addCardBtn");
+const cardModal = document.getElementById("cardModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const cardForm = document.getElementById("cardForm");
+
+const categoryInput = document.getElementById("categoryInput");
+const titleInput = document.getElementById("titleInput");
+const contentInput = document.getElementById("contentInput");
+
 function renderCards() {
   cardsContainer.innerHTML = "";
 
@@ -47,5 +57,32 @@ function renderCards() {
     cardsContainer.appendChild(cardElement);
   });
 }
+
+function openModal() {
+  cardModal.classList.remove("hidden");
+}
+
+function closeModal() {
+  cardModal.classList.add("hidden");
+  cardForm.reset();
+}
+
+addCardBtn.addEventListener("click", openModal);
+closeModalBtn.addEventListener("click", closeModal);
+
+cardForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+
+  const newCard = {
+    id: Date.now(),
+    category: categoryInput.value,
+    title: titleInput.value,
+    content: contentInput.value,
+  };
+
+  cards.push(newCard);
+  renderCards();
+  closeModal();
+});
 
 renderCards();
