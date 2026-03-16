@@ -280,3 +280,10 @@ body {
 .submit-btn:hover {
   opacity: 0.95;
 }
+
+#sortSelect {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}

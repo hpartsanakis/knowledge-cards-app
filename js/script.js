@@ -1,8 +1,7 @@
 /* =========================
    DATA
    =========================
-   Εδώ βρίσκονται τα αρχικά cards data.
-   Κάθε card είναι object με id, category, title, content.
+   Τα αρχικά cards της εφαρμογής.
 */
 const cards = [
   {
@@ -28,11 +27,11 @@ const cards = [
 /* =========================
    DOM ELEMENTS
    =========================
-   Παίρνουμε references από το HTML
-   ώστε να τα χρησιμοποιούμε με JavaScript.
+   Παίρνουμε references από το HTML.
 */
 const cardsContainer = document.getElementById("cardsContainer");
 const searchInput = document.getElementById("searchInput");
+const sortSelect = document.getElementById("sortSelect");
 
 const addCardBtn = document.getElementById("addCardBtn");
 const cardModal = document.getElementById("cardModal");
@@ -48,28 +47,64 @@ const modalTitle = document.getElementById("modalTitle");
    APP STATE
    =========================
    editingCardId:
-   - null  => create mode
+   - null   => create mode
    - number => edit mode
 
    openedCardId:
-   - null  => καμία ανοιχτή
+   - null   => καμία ανοιχτή card
    - number => ποια card είναι ανοιχτή
 */
 let editingCardId = null;
 let openedCardId = null;
 
 /* =========================
+   SORT CARDS
+   =========================
+   Ταξινομεί το array ανάλογα με το dropdown.
+*/
+function sortCards(data) {
+  const mode = sortSelect.value;
+  const sorted = [...data];
+
+  if (mode === "az") {
+    sorted.sort((a, b) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+    );
+  }
+
+  if (mode === "za") {
+    sorted.sort((a, b) =>
+      b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+    );
+  }
+
+  if (mode === "newest") {
+    sorted.sort((a, b) => b.id - a.id);
+  }
+
+  if (mode === "category") {
+    sorted.sort((a, b) =>
+      a.category.localeCompare(b.category, undefined, { sensitivity: "base" })
+    );
+  }
+
+  return sorted;
+}
+
+/* =========================
    RENDER CARDS
    =========================
-   Αυτή η function "ζωγραφίζει" τα cards στη σελίδα.
-   Δέχεται προαιρετικά data, ώστε να μπορούμε
-   να κάνουμε render και filtered results από search.
+   Ζωγραφίζει τη λίστα των cards.
+   Δέχεται προαιρετικά filtered data.
 */
 function renderCards(data = cards) {
-  /* Καθαρίζουμε πρώτα το container */
+  /* Πρώτα κάνουμε sorting */
+  data = sortCards(data);
+
+  /* Καθαρίζουμε το container */
   cardsContainer.innerHTML = "";
 
-  /* Αν δεν υπάρχουν αποτελέσματα, δείχνουμε μήνυμα */
+  /* Αν δεν υπάρχουν αποτελέσματα */
   if (data.length === 0) {
     cardsContainer.innerHTML = `
       <div class="empty-state">
@@ -80,23 +115,15 @@ function renderCards(data = cards) {
     return;
   }
 
-  /* Δημιουργούμε κάθε item της λίστας */
+  /* Δημιουργούμε κάθε card */
   data.forEach((card) => {
     const cardElement = document.createElement("article");
     cardElement.classList.add("card");
     cardElement.dataset.id = card.id;
 
-    /* 
-      Αν το openedCardId είναι ίδιο με το id της card,
-      τότε η card θα εμφανιστεί ανοιχτή.
-    */
+    /* Ελέγχουμε αν η συγκεκριμένη card είναι ανοιχτή */
     const isOpen = openedCardId === card.id;
 
-    /* 
-      Το card έχει:
-      - button/header που πατιέται
-      - body που ανοίγει/κλείνει
-    */
     cardElement.innerHTML = `
       <div class="card-top">
         <button type="button" class="card-toggle">
@@ -115,17 +142,12 @@ function renderCards(data = cards) {
       </div>
     `;
 
-    /* Βρίσκουμε τα επιμέρους buttons μέσα στην card */
+    /* Παίρνουμε τα κουμπιά της card */
     const toggleBtn = cardElement.querySelector(".card-toggle");
     const editBtn = cardElement.querySelector(".edit-btn");
     const deleteBtn = cardElement.querySelector(".delete-btn");
 
-    /* 
-      TOGGLE CARD
-      Αν πατήσεις τον τίτλο:
-      - αν είναι ήδη ανοιχτή, κλείνει
-      - αλλιώς ανοίγει αυτή και κλείνουν οι άλλες
-    */
+    /* Άνοιγμα / κλείσιμο card */
     toggleBtn.addEventListener("click", () => {
       if (openedCardId === card.id) {
         openedCardId = null;
@@ -133,25 +155,19 @@ function renderCards(data = cards) {
         openedCardId = card.id;
       }
 
-      /* 
-         Αν υπάρχει active search,
-         ξανακάνουμε render τα filtered αποτελέσματα.
-         Αλλιώς όλη τη λίστα.
-      */
       applySearch();
     });
 
-    /* EDIT BUTTON */
+    /* Edit card */
     editBtn.addEventListener("click", () => {
       editCard(card.id);
     });
 
-    /* DELETE BUTTON */
+    /* Delete card */
     deleteBtn.addEventListener("click", () => {
       deleteCard(card.id);
     });
 
-    /* Βάζουμε το item μέσα στο container */
     cardsContainer.appendChild(cardElement);
   });
 }
@@ -159,23 +175,21 @@ function renderCards(data = cards) {
 /* =========================
    SEARCH
    =========================
-   Φιλτράρει τα cards βάσει:
+   Φιλτράρει cards με βάση:
    - title
    - category
    - content
-
-   Και κάνει render μόνο τα matching cards.
 */
 function applySearch() {
   const searchTerm = searchInput.value.trim().toLowerCase();
 
-  /* Αν δεν έχει γραφτεί τίποτα, δείξε όλες τις cards */
+  /* Αν το search είναι κενό, δείξε όλα τα cards */
   if (!searchTerm) {
     renderCards(cards);
     return;
   }
 
-  /* Φιλτράρουμε τα cards */
+  /* Φιλτράρουμε */
   const filteredCards = cards.filter((card) => {
     return (
       card.title.toLowerCase().includes(searchTerm) ||
@@ -184,17 +198,11 @@ function applySearch() {
     );
   });
 
-  /* 
-     Προαιρετικά: αν υπάρχει μόνο 1 αποτέλεσμα,
-     το ανοίγουμε αυτόματα.
-  */
+  /* Αν υπάρχει μόνο 1 αποτέλεσμα, άνοιξέ το */
   if (filteredCards.length === 1) {
     openedCardId = filteredCards[0].id;
   } else if (!filteredCards.some((card) => card.id === openedCardId)) {
-    /* 
-       Αν το ανοιχτό card δεν υπάρχει πια στα αποτελέσματα,
-       το κλείνουμε.
-    */
+    /* Αν το ανοιχτό card δεν υπάρχει στα αποτελέσματα, κλείσ' το */
     openedCardId = null;
   }
 
@@ -202,7 +210,7 @@ function applySearch() {
 }
 
 /* =========================
-   MODAL FUNCTIONS
+   MODAL
    =========================
    Άνοιγμα / κλείσιμο modal
 */
@@ -225,8 +233,7 @@ function closeModal() {
 /* =========================
    DELETE CARD
    =========================
-   Βρίσκει το σωστό id, σβήνει από το array
-   και ξανακάνει render.
+   Σβήνει card από το array.
 */
 function deleteCard(id) {
   const index = cards.findIndex((card) => card.id === id);
@@ -234,7 +241,6 @@ function deleteCard(id) {
   if (index !== -1) {
     cards.splice(index, 1);
 
-    /* Αν ήταν ανοιχτή η ίδια card, την κλείνουμε */
     if (openedCardId === id) {
       openedCardId = null;
     }
@@ -246,8 +252,7 @@ function deleteCard(id) {
 /* =========================
    EDIT CARD
    =========================
-   Γεμίζει το modal με τα υπάρχοντα data
-   και ανοίγει το modal σε edit mode.
+   Γεμίζει το modal με τα υπάρχοντα δεδομένα.
 */
 function editCard(id) {
   const cardToEdit = cards.find((card) => card.id === id);
@@ -265,7 +270,7 @@ function editCard(id) {
 /* =========================
    ADD CARD BUTTON
    =========================
-   Ανοίγει άδειο modal για create mode.
+   Ανοίγει το modal για create mode.
 */
 addCardBtn.addEventListener("click", () => {
   editingCardId = null;
@@ -300,7 +305,7 @@ cardForm.addEventListener("submit", (event) => {
 
     cards.push(newCard);
 
-    /* Ανοίγουμε αυτόματα τη νέα card */
+    /* Άνοιξε αυτόματα τη νέα card */
     openedCardId = newCard.id;
   } else {
     const cardToUpdate = cards.find((card) => card.id === editingCardId);
@@ -310,7 +315,7 @@ cardForm.addEventListener("submit", (event) => {
       cardToUpdate.title = titleInput.value.trim();
       cardToUpdate.content = contentInput.value.trim();
 
-      /* Ανοίγουμε την edited card μετά το save */
+      /* Άνοιξε την edited card */
       openedCardId = cardToUpdate.id;
     }
   }
@@ -320,16 +325,21 @@ cardForm.addEventListener("submit", (event) => {
 });
 
 /* =========================
-   SEARCH INPUT LISTENER
+   SEARCH LISTENER
    =========================
-   Κάθε φορά που γράφεις στο search,
-   φιλτράρονται live τα cards.
+   Live filtering όσο γράφεις.
 */
 searchInput.addEventListener("input", applySearch);
 
 /* =========================
-   INITIAL RENDER
+   SORT LISTENER
    =========================
-   Πρώτο render όταν φορτώνει η σελίδα.
+   Όταν αλλάζει το sort dropdown,
+   ξανακάνουμε render με το σωστό sorting.
 */
+sortSelect.addEventListener("change", applySearch);
+
+/* =========================
+   INITIAL RENDER
+   ========================= */
 renderCards();
