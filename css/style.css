@@ -1,6 +1,7 @@
-/* =========================
-   RESET / BASE
-   ========================= */
+/* =========================================
+   1. RESET / BASE
+========================================= */
+
 * {
   box-sizing: border-box;
 }
@@ -12,9 +13,10 @@ body {
   color: #222;
 }
 
-/* =========================
-   HEADER
-   ========================= */
+/* =========================================
+   2. HEADER
+========================================= */
+
 .app-header {
   background: white;
   padding: 20px 30px;
@@ -30,13 +32,15 @@ body {
   font-size: 28px;
 }
 
-/* =========================
-   TOP CONTROLS
-   ========================= */
+/* =========================================
+   3. TOP CONTROLS
+========================================= */
+
 .controls {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 #searchInput {
@@ -46,6 +50,16 @@ body {
   border: 1px solid #ccc;
   border-radius: 8px;
   outline: none;
+  background: white;
+}
+
+#sortSelect {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+  background: white;
 }
 
 #addCardBtn {
@@ -62,12 +76,52 @@ body {
   opacity: 0.9;
 }
 
-/* =========================
-   CARDS CONTAINER
-   =========================
-   Τώρα δεν έχουμε grid cards.
-   Έχουμε vertical list / accordion list.
-*/
+#installBtn {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#installBtn:hover {
+  opacity: 0.95;
+}
+
+/* =========================================
+   4. COLLECTIONS BAR
+========================================= */
+
+.collections-bar {
+  max-width: 900px;
+  margin: 20px auto 0;
+  padding: 0 24px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.collection-btn {
+  border: none;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 14px;
+}
+
+.collection-btn.active {
+  background: #222;
+  color: white;
+}
+
+/* =========================================
+   5. CARDS CONTAINER
+========================================= */
+
 .cards-container {
   max-width: 900px;
   margin: 0 auto;
@@ -77,9 +131,10 @@ body {
   gap: 12px;
 }
 
-/* =========================
-   CARD LIST ITEM
-   ========================= */
+/* =========================================
+   6. CARD LIST ITEM
+========================================= */
+
 .card {
   background: white;
   border-radius: 14px;
@@ -87,9 +142,10 @@ body {
   overflow: hidden;
 }
 
-/* =========================
-   CARD TOP / TOGGLE
-   ========================= */
+/* =========================================
+   7. CARD TOP / TOGGLE
+========================================= */
+
 .card-top {
   width: 100%;
 }
@@ -127,12 +183,24 @@ body {
   color: #222;
 }
 
-/* =========================
-   CARD BODY
-   ========================= */
+/* =========================================
+   8. CARD BODY
+========================================= */
+
 .card-body {
   padding: 0 20px 20px;
   border-top: 1px solid #eee;
+}
+
+.hidden-content {
+  display: none;
+}
+
+.card-image {
+  width: 100%;
+  border-radius: 10px;
+  margin: 16px 0 10px;
+  display: block;
 }
 
 .card-content {
@@ -141,16 +209,14 @@ body {
   color: #444;
 }
 
-.hidden-content {
-  display: none;
-}
+/* =========================================
+   9. CARD ACTIONS
+========================================= */
 
-/* =========================
-   CARD ACTIONS
-   ========================= */
 .card-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .edit-btn,
@@ -170,9 +236,10 @@ body {
   background: #ffe3e3;
 }
 
-/* =========================
-   EMPTY STATE
-   ========================= */
+/* =========================================
+   10. EMPTY STATE
+========================================= */
+
 .empty-state {
   background: white;
   border-radius: 14px;
@@ -191,9 +258,10 @@ body {
   color: #666;
 }
 
-/* =========================
-   MODAL
-   ========================= */
+/* =========================================
+   11. MODAL
+========================================= */
+
 .modal {
   position: fixed;
   inset: 0;
@@ -237,9 +305,10 @@ body {
   line-height: 1;
 }
 
-/* =========================
-   FORM
-   ========================= */
+/* =========================================
+   12. FORM
+========================================= */
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -253,13 +322,15 @@ body {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   padding: 10px 12px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 10px;
   font-family: inherit;
   outline: none;
+  background: white;
 }
 
 .form-group textarea {
@@ -281,32 +352,157 @@ body {
   opacity: 0.95;
 }
 
-#sortSelect {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+/* =========================================
+   13. RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+  body {
+    background: #f3f4f6;
+  }
+
+  .app-header {
+    padding: 14px 14px 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .app-header h1 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  #searchInput,
+  #sortSelect,
+  #addCardBtn,
+  #installBtn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .collections-bar {
+    margin-top: 12px;
+    padding: 0 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .collection-btn {
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .cards-container {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .card {
+    border-radius: 12px;
+  }
+
+  .card-toggle {
+    padding: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .card-category {
+    font-size: 11px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .card-body {
+    padding: 0 14px 14px;
+  }
+
+  .card-image {
+    margin: 14px 0 10px;
+    border-radius: 8px;
+  }
+
+  .card-content {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 12px 0 16px;
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 100%;
+    min-height: 42px;
+    font-size: 14px;
+  }
+
+  .modal {
+    padding: 0;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    padding: 18px 14px 24px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .close-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .submit-btn {
+    min-height: 46px;
+    font-size: 16px;
+  }
 }
 
-.collections-bar {
-  max-width: 900px;
-  margin: 20px auto 0;
-  padding: 0 24px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+@supports (padding: max(0px)) {
+  .app-header {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
 
-.collection-btn {
-  border: none;
-  background: white;
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.collection-btn.active {
-  background: #222;
-  color: white;
+  .modal-content {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
 }

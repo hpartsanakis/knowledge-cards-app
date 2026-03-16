@@ -1,8 +1,5 @@
 /* =========================================
    1. DATA
-   =========================================
-   Τα αρχικά δεδομένα της εφαρμογής.
-   Κάθε card ανήκει σε μία collection.
 ========================================= */
 
 const cards = [
@@ -12,6 +9,7 @@ const cards = [
     category: "Street",
     title: "Blue Hour in Frankfurt",
     content: "Best moment was 10 minutes after sunset near the river.",
+    image: null
   },
   {
     id: 2,
@@ -19,6 +17,7 @@ const cards = [
     category: "Dinner",
     title: "Greek Chicken Bowl",
     content: "Chicken, rice, cucumber, tomato, yogurt sauce.",
+    image: null
   },
   {
     id: 3,
@@ -26,24 +25,21 @@ const cards = [
     category: "Norway",
     title: "Tromsø Harbour",
     content: "Perfect location for blue hour photos and night reflections.",
-  },
+    image: null
+  }
 ];
 
-/* Load saved cards from browser */
+/* Load saved cards from localStorage */
 const savedCards = localStorage.getItem("knowledgeCards");
 
 if (savedCards) {
   const parsedCards = JSON.parse(savedCards);
-
   cards.length = 0;
   cards.push(...parsedCards);
 }
 
 /* =========================================
    2. DOM ELEMENTS
-   =========================================
-   Παίρνουμε references από το HTML
-   για να δουλεύουμε με JavaScript.
 ========================================= */
 
 const cardsContainer = document.getElementById("cardsContainer");
@@ -51,6 +47,8 @@ const searchInput = document.getElementById("searchInput");
 const sortSelect = document.getElementById("sortSelect");
 
 const addCardBtn = document.getElementById("addCardBtn");
+const installBtn = document.getElementById("installBtn");
+
 const cardModal = document.getElementById("cardModal");
 const closeModalBtn = document.getElementById("closeModalBtn");
 const cardForm = document.getElementById("cardForm");
@@ -58,60 +56,45 @@ const cardForm = document.getElementById("cardForm");
 const categoryInput = document.getElementById("categoryInput");
 const titleInput = document.getElementById("titleInput");
 const contentInput = document.getElementById("contentInput");
+const imageInput = document.getElementById("imageInput");
 const modalTitle = document.getElementById("modalTitle");
 
 const collectionButtons = document.querySelectorAll(".collection-btn");
 
 /* =========================================
    3. APP STATE
-   =========================================
-   Εδώ κρατάμε την κατάσταση της εφαρμογής.
-
-   editingCardId:
-   - null   => create mode
-   - number => edit mode
-
-   openedCardId:
-   - null   => καμία ανοιχτή card
-   - number => ποια card είναι ανοιχτή
-
-   activeCollection:
-   - ποια collection βλέπει ο χρήστης τώρα
 ========================================= */
 
 let editingCardId = null;
 let openedCardId = null;
 let activeCollection = "photos";
+let deferredPrompt = null;
 
 /* =========================================
    4. HELPER FUNCTIONS
-   =========================================
-   Μικρές βοηθητικές functions.
 ========================================= */
 
-/* 
-   Επιστρέφει τα cards της ενεργής collection.
-*/
+function saveCards() {
+  localStorage.setItem("knowledgeCards", JSON.stringify(cards));
+}
+
 function getCardsByActiveCollection() {
   return cards.filter((card) => card.collection === activeCollection);
 }
 
-/*
-   Ταξινομεί τα cards σύμφωνα με το sort dropdown.
-*/
 function sortCards(data) {
   const mode = sortSelect.value;
   const sorted = [...data];
 
   if (mode === "az") {
     sorted.sort((a, b) =>
-      a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
+      a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
     );
   }
 
   if (mode === "za") {
     sorted.sort((a, b) =>
-      b.title.localeCompare(a.title, undefined, { sensitivity: "base" }),
+      b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
     );
   }
 
@@ -121,27 +104,29 @@ function sortCards(data) {
 
   if (mode === "category") {
     sorted.sort((a, b) =>
-      a.category.localeCompare(b.category, undefined, { sensitivity: "base" }),
+      a.category.localeCompare(b.category, undefined, { sensitivity: "base" })
     );
   }
 
   return sorted;
 }
 
-/* Save cards to browser */
-function saveCards() {
-  localStorage.setItem("knowledgeCards", JSON.stringify(cards));
+function convertImageToBase64(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      resolve(reader.result);
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 /* =========================================
    5. RENDER FUNCTIONS
-   =========================================
-   Functions που "ζωγραφίζουν" το UI.
 ========================================= */
 
-/*
-   Δημιουργεί και εμφανίζει τα cards στη σελίδα.
-*/
 function renderCards(data = []) {
   const sortedData = sortCards(data);
 
@@ -173,6 +158,8 @@ function renderCards(data = []) {
       </div>
 
       <div class="card-body ${isOpen ? "" : "hidden-content"}">
+        ${card.image ? `<img src="${card.image}" alt="${card.title}" class="card-image">` : ""}
+
         <p class="card-content">${card.content}</p>
 
         <div class="card-actions">
@@ -210,11 +197,6 @@ function renderCards(data = []) {
 
 /* =========================================
    6. FILTER / SEARCH LOGIC
-   =========================================
-   Εδώ φιλτράρουμε τα cards με βάση:
-   - active collection
-   - search input
-   και μετά κάνουμε render.
 ========================================= */
 
 function applyFiltersAndRender() {
@@ -243,8 +225,6 @@ function applyFiltersAndRender() {
 
 /* =========================================
    7. MODAL FUNCTIONS
-   =========================================
-   Άνοιγμα / κλείσιμο modal.
 ========================================= */
 
 function openModal() {
@@ -260,18 +240,14 @@ function openModal() {
 function closeModal() {
   cardModal.classList.add("hidden");
   cardForm.reset();
+  imageInput.value = "";
   editingCardId = null;
 }
 
 /* =========================================
    8. CRUD FUNCTIONS
-   =========================================
-   Create / Update / Delete / Edit prep
 ========================================= */
 
-/*
-   Διαγραφή card
-*/
 function deleteCard(id) {
   const index = cards.findIndex((card) => card.id === id);
 
@@ -282,16 +258,11 @@ function deleteCard(id) {
       openedCardId = null;
     }
 
+    saveCards();
     applyFiltersAndRender();
   }
-
-  saveCards();
 }
 
-/*
-   Προετοιμασία edit:
-   γεμίζει το modal με τα τωρινά δεδομένα
-*/
 function editCard(id) {
   const cardToEdit = cards.find((card) => card.id === id);
 
@@ -305,27 +276,28 @@ function editCard(id) {
   openModal();
 }
 
-/*
-   Create new card
-*/
-function createCard() {
+async function createCard() {
+  let imageData = null;
+
+  if (imageInput.files[0]) {
+    imageData = await convertImageToBase64(imageInput.files[0]);
+  }
+
   const newCard = {
     id: Date.now(),
     collection: activeCollection,
     category: categoryInput.value.trim(),
     title: titleInput.value.trim(),
     content: contentInput.value.trim(),
+    image: imageData
   };
 
   cards.push(newCard);
-  saveCards();
   openedCardId = newCard.id;
+  saveCards();
 }
 
-/*
-   Update existing card
-*/
-function updateCard() {
+async function updateCard() {
   const cardToUpdate = cards.find((card) => card.id === editingCardId);
 
   if (!cardToUpdate) return;
@@ -334,66 +306,48 @@ function updateCard() {
   cardToUpdate.title = titleInput.value.trim();
   cardToUpdate.content = contentInput.value.trim();
 
-  openedCardId = cardToUpdate.id;
+  if (imageInput.files[0]) {
+    cardToUpdate.image = await convertImageToBase64(imageInput.files[0]);
+  }
 
+  openedCardId = cardToUpdate.id;
   saveCards();
 }
 
 /* =========================================
    9. EVENT LISTENERS
-   =========================================
-   Εδώ συνδέουμε events με functions.
 ========================================= */
 
-/*
-   Add Card button
-*/
 addCardBtn.addEventListener("click", () => {
   editingCardId = null;
   cardForm.reset();
+  imageInput.value = "";
   openModal();
 });
 
-/*
-   Close modal button
-*/
 closeModalBtn.addEventListener("click", closeModal);
 
-/*
-   Form submit
-   - create mode
-   - edit mode
-*/
-cardForm.addEventListener("submit", (event) => {
+cardForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (editingCardId === null) {
-    createCard();
+    await createCard();
   } else {
-    updateCard();
+    await updateCard();
   }
 
   closeModal();
   applyFiltersAndRender();
 });
 
-/*
-   Search input
-*/
 searchInput.addEventListener("input", () => {
   applyFiltersAndRender();
 });
 
-/*
-   Sort dropdown
-*/
 sortSelect.addEventListener("change", () => {
   applyFiltersAndRender();
 });
 
-/*
-   Collection buttons
-*/
 collectionButtons.forEach((button) => {
   button.addEventListener("click", () => {
     activeCollection = button.dataset.collection;
@@ -411,9 +365,48 @@ collectionButtons.forEach((button) => {
 });
 
 /* =========================================
-   10. INITIAL START
-   =========================================
-   Τι γίνεται όταν φορτώνει η σελίδα.
+   10. PWA INSTALL BUTTON
+========================================= */
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredPrompt = event;
+  installBtn.style.display = "inline-block";
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === "accepted") {
+    console.log("App installed");
+  }
+
+  deferredPrompt = null;
+  installBtn.style.display = "none";
+});
+
+/* =========================================
+   11. INITIAL START
 ========================================= */
 
 applyFiltersAndRender();
+
+/* =========================================
+   12. SERVICE WORKER
+========================================= */
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => {
+        console.log("Service Worker registered");
+      })
+      .catch((error) => {
+        console.log("Service Worker registration failed:", error);
+      });
+  });
+}
