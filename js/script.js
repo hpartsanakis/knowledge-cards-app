@@ -1,34 +1,51 @@
-/* =========================
-   DATA
-   =========================
-   Τα αρχικά cards της εφαρμογής.
-*/
+/* =========================================
+   1. DATA
+   =========================================
+   Τα αρχικά δεδομένα της εφαρμογής.
+   Κάθε card ανήκει σε μία collection.
+========================================= */
+
 const cards = [
   {
     id: 1,
-    category: "JavaScript",
-    title: "Variables",
-    content: "let creates a block-scoped variable that can be updated later."
+    collection: "photos",
+    category: "Street",
+    title: "Blue Hour in Frankfurt",
+    content: "Best moment was 10 minutes after sunset near the river.",
   },
   {
     id: 2,
-    category: "HTML",
-    title: "Semantic Tags",
-    content: "Semantic HTML tags like header, main, section and article improve structure."
+    collection: "recipes",
+    category: "Dinner",
+    title: "Greek Chicken Bowl",
+    content: "Chicken, rice, cucumber, tomato, yogurt sauce.",
   },
   {
     id: 3,
-    category: "CSS",
-    title: "Flexbox",
-    content: "display: flex helps align items in rows or columns."
-  }
+    collection: "travel",
+    category: "Norway",
+    title: "Tromsø Harbour",
+    content: "Perfect location for blue hour photos and night reflections.",
+  },
 ];
 
-/* =========================
-   DOM ELEMENTS
-   =========================
-   Παίρνουμε references από το HTML.
-*/
+/* Load saved cards from browser */
+const savedCards = localStorage.getItem("knowledgeCards");
+
+if (savedCards) {
+  const parsedCards = JSON.parse(savedCards);
+
+  cards.length = 0;
+  cards.push(...parsedCards);
+}
+
+/* =========================================
+   2. DOM ELEMENTS
+   =========================================
+   Παίρνουμε references από το HTML
+   για να δουλεύουμε με JavaScript.
+========================================= */
+
 const cardsContainer = document.getElementById("cardsContainer");
 const searchInput = document.getElementById("searchInput");
 const sortSelect = document.getElementById("sortSelect");
@@ -43,9 +60,13 @@ const titleInput = document.getElementById("titleInput");
 const contentInput = document.getElementById("contentInput");
 const modalTitle = document.getElementById("modalTitle");
 
-/* =========================
-   APP STATE
-   =========================
+const collectionButtons = document.querySelectorAll(".collection-btn");
+
+/* =========================================
+   3. APP STATE
+   =========================================
+   Εδώ κρατάμε την κατάσταση της εφαρμογής.
+
    editingCardId:
    - null   => create mode
    - number => edit mode
@@ -53,14 +74,30 @@ const modalTitle = document.getElementById("modalTitle");
    openedCardId:
    - null   => καμία ανοιχτή card
    - number => ποια card είναι ανοιχτή
-*/
+
+   activeCollection:
+   - ποια collection βλέπει ο χρήστης τώρα
+========================================= */
+
 let editingCardId = null;
 let openedCardId = null;
+let activeCollection = "photos";
 
-/* =========================
-   SORT CARDS
-   =========================
-   Ταξινομεί το array ανάλογα με το dropdown.
+/* =========================================
+   4. HELPER FUNCTIONS
+   =========================================
+   Μικρές βοηθητικές functions.
+========================================= */
+
+/* 
+   Επιστρέφει τα cards της ενεργής collection.
+*/
+function getCardsByActiveCollection() {
+  return cards.filter((card) => card.collection === activeCollection);
+}
+
+/*
+   Ταξινομεί τα cards σύμφωνα με το sort dropdown.
 */
 function sortCards(data) {
   const mode = sortSelect.value;
@@ -68,13 +105,13 @@ function sortCards(data) {
 
   if (mode === "az") {
     sorted.sort((a, b) =>
-      a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+      a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
     );
   }
 
   if (mode === "za") {
     sorted.sort((a, b) =>
-      b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+      b.title.localeCompare(a.title, undefined, { sensitivity: "base" }),
     );
   }
 
@@ -84,28 +121,33 @@ function sortCards(data) {
 
   if (mode === "category") {
     sorted.sort((a, b) =>
-      a.category.localeCompare(b.category, undefined, { sensitivity: "base" })
+      a.category.localeCompare(b.category, undefined, { sensitivity: "base" }),
     );
   }
 
   return sorted;
 }
 
-/* =========================
-   RENDER CARDS
-   =========================
-   Ζωγραφίζει τη λίστα των cards.
-   Δέχεται προαιρετικά filtered data.
-*/
-function renderCards(data = cards) {
-  /* Πρώτα κάνουμε sorting */
-  data = sortCards(data);
+/* Save cards to browser */
+function saveCards() {
+  localStorage.setItem("knowledgeCards", JSON.stringify(cards));
+}
 
-  /* Καθαρίζουμε το container */
+/* =========================================
+   5. RENDER FUNCTIONS
+   =========================================
+   Functions που "ζωγραφίζουν" το UI.
+========================================= */
+
+/*
+   Δημιουργεί και εμφανίζει τα cards στη σελίδα.
+*/
+function renderCards(data = []) {
+  const sortedData = sortCards(data);
+
   cardsContainer.innerHTML = "";
 
-  /* Αν δεν υπάρχουν αποτελέσματα */
-  if (data.length === 0) {
+  if (sortedData.length === 0) {
     cardsContainer.innerHTML = `
       <div class="empty-state">
         <h3>No cards found</h3>
@@ -115,14 +157,12 @@ function renderCards(data = cards) {
     return;
   }
 
-  /* Δημιουργούμε κάθε card */
-  data.forEach((card) => {
+  sortedData.forEach((card) => {
     const cardElement = document.createElement("article");
+    const isOpen = openedCardId === card.id;
+
     cardElement.classList.add("card");
     cardElement.dataset.id = card.id;
-
-    /* Ελέγχουμε αν η συγκεκριμένη card είναι ανοιχτή */
-    const isOpen = openedCardId === card.id;
 
     cardElement.innerHTML = `
       <div class="card-top">
@@ -142,12 +182,10 @@ function renderCards(data = cards) {
       </div>
     `;
 
-    /* Παίρνουμε τα κουμπιά της card */
     const toggleBtn = cardElement.querySelector(".card-toggle");
     const editBtn = cardElement.querySelector(".edit-btn");
     const deleteBtn = cardElement.querySelector(".delete-btn");
 
-    /* Άνοιγμα / κλείσιμο card */
     toggleBtn.addEventListener("click", () => {
       if (openedCardId === card.id) {
         openedCardId = null;
@@ -155,15 +193,13 @@ function renderCards(data = cards) {
         openedCardId = card.id;
       }
 
-      applySearch();
+      applyFiltersAndRender();
     });
 
-    /* Edit card */
     editBtn.addEventListener("click", () => {
       editCard(card.id);
     });
 
-    /* Delete card */
     deleteBtn.addEventListener("click", () => {
       deleteCard(card.id);
     });
@@ -172,48 +208,45 @@ function renderCards(data = cards) {
   });
 }
 
-/* =========================
-   SEARCH
-   =========================
-   Φιλτράρει cards με βάση:
-   - title
-   - category
-   - content
-*/
-function applySearch() {
+/* =========================================
+   6. FILTER / SEARCH LOGIC
+   =========================================
+   Εδώ φιλτράρουμε τα cards με βάση:
+   - active collection
+   - search input
+   και μετά κάνουμε render.
+========================================= */
+
+function applyFiltersAndRender() {
   const searchTerm = searchInput.value.trim().toLowerCase();
 
-  /* Αν το search είναι κενό, δείξε όλα τα cards */
-  if (!searchTerm) {
-    renderCards(cards);
-    return;
+  let filteredCards = getCardsByActiveCollection();
+
+  if (searchTerm) {
+    filteredCards = filteredCards.filter((card) => {
+      return (
+        card.title.toLowerCase().includes(searchTerm) ||
+        card.category.toLowerCase().includes(searchTerm) ||
+        card.content.toLowerCase().includes(searchTerm)
+      );
+    });
   }
 
-  /* Φιλτράρουμε */
-  const filteredCards = cards.filter((card) => {
-    return (
-      card.title.toLowerCase().includes(searchTerm) ||
-      card.category.toLowerCase().includes(searchTerm) ||
-      card.content.toLowerCase().includes(searchTerm)
-    );
-  });
-
-  /* Αν υπάρχει μόνο 1 αποτέλεσμα, άνοιξέ το */
   if (filteredCards.length === 1) {
     openedCardId = filteredCards[0].id;
   } else if (!filteredCards.some((card) => card.id === openedCardId)) {
-    /* Αν το ανοιχτό card δεν υπάρχει στα αποτελέσματα, κλείσ' το */
     openedCardId = null;
   }
 
   renderCards(filteredCards);
 }
 
-/* =========================
-   MODAL
-   =========================
-   Άνοιγμα / κλείσιμο modal
-*/
+/* =========================================
+   7. MODAL FUNCTIONS
+   =========================================
+   Άνοιγμα / κλείσιμο modal.
+========================================= */
+
 function openModal() {
   if (editingCardId === null) {
     modalTitle.textContent = "Add New Card";
@@ -230,10 +263,14 @@ function closeModal() {
   editingCardId = null;
 }
 
-/* =========================
-   DELETE CARD
-   =========================
-   Σβήνει card από το array.
+/* =========================================
+   8. CRUD FUNCTIONS
+   =========================================
+   Create / Update / Delete / Edit prep
+========================================= */
+
+/*
+   Διαγραφή card
 */
 function deleteCard(id) {
   const index = cards.findIndex((card) => card.id === id);
@@ -245,14 +282,15 @@ function deleteCard(id) {
       openedCardId = null;
     }
 
-    applySearch();
+    applyFiltersAndRender();
   }
+
+  saveCards();
 }
 
-/* =========================
-   EDIT CARD
-   =========================
-   Γεμίζει το modal με τα υπάρχοντα δεδομένα.
+/*
+   Προετοιμασία edit:
+   γεμίζει το modal με τα τωρινά δεδομένα
 */
 function editCard(id) {
   const cardToEdit = cards.find((card) => card.id === id);
@@ -267,10 +305,48 @@ function editCard(id) {
   openModal();
 }
 
-/* =========================
-   ADD CARD BUTTON
-   =========================
-   Ανοίγει το modal για create mode.
+/*
+   Create new card
+*/
+function createCard() {
+  const newCard = {
+    id: Date.now(),
+    collection: activeCollection,
+    category: categoryInput.value.trim(),
+    title: titleInput.value.trim(),
+    content: contentInput.value.trim(),
+  };
+
+  cards.push(newCard);
+  saveCards();
+  openedCardId = newCard.id;
+}
+
+/*
+   Update existing card
+*/
+function updateCard() {
+  const cardToUpdate = cards.find((card) => card.id === editingCardId);
+
+  if (!cardToUpdate) return;
+
+  cardToUpdate.category = categoryInput.value.trim();
+  cardToUpdate.title = titleInput.value.trim();
+  cardToUpdate.content = contentInput.value.trim();
+
+  openedCardId = cardToUpdate.id;
+
+  saveCards();
+}
+
+/* =========================================
+   9. EVENT LISTENERS
+   =========================================
+   Εδώ συνδέουμε events με functions.
+========================================= */
+
+/*
+   Add Card button
 */
 addCardBtn.addEventListener("click", () => {
   editingCardId = null;
@@ -278,68 +354,66 @@ addCardBtn.addEventListener("click", () => {
   openModal();
 });
 
-/* =========================
-   CLOSE MODAL BUTTON
-   ========================= */
+/*
+   Close modal button
+*/
 closeModalBtn.addEventListener("click", closeModal);
 
-/* =========================
-   FORM SUBMIT
-   =========================
-   Αν editingCardId === null:
-   -> create new card
-
-   Αλλιώς:
-   -> update existing card
+/*
+   Form submit
+   - create mode
+   - edit mode
 */
 cardForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
   if (editingCardId === null) {
-    const newCard = {
-      id: Date.now(),
-      category: categoryInput.value.trim(),
-      title: titleInput.value.trim(),
-      content: contentInput.value.trim()
-    };
-
-    cards.push(newCard);
-
-    /* Άνοιξε αυτόματα τη νέα card */
-    openedCardId = newCard.id;
+    createCard();
   } else {
-    const cardToUpdate = cards.find((card) => card.id === editingCardId);
-
-    if (cardToUpdate) {
-      cardToUpdate.category = categoryInput.value.trim();
-      cardToUpdate.title = titleInput.value.trim();
-      cardToUpdate.content = contentInput.value.trim();
-
-      /* Άνοιξε την edited card */
-      openedCardId = cardToUpdate.id;
-    }
+    updateCard();
   }
 
   closeModal();
-  applySearch();
+  applyFiltersAndRender();
 });
 
-/* =========================
-   SEARCH LISTENER
-   =========================
-   Live filtering όσο γράφεις.
+/*
+   Search input
 */
-searchInput.addEventListener("input", applySearch);
+searchInput.addEventListener("input", () => {
+  applyFiltersAndRender();
+});
 
-/* =========================
-   SORT LISTENER
-   =========================
-   Όταν αλλάζει το sort dropdown,
-   ξανακάνουμε render με το σωστό sorting.
+/*
+   Sort dropdown
 */
-sortSelect.addEventListener("change", applySearch);
+sortSelect.addEventListener("change", () => {
+  applyFiltersAndRender();
+});
 
-/* =========================
-   INITIAL RENDER
-   ========================= */
-renderCards();
+/*
+   Collection buttons
+*/
+collectionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeCollection = button.dataset.collection;
+    openedCardId = null;
+    searchInput.value = "";
+
+    collectionButtons.forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    applyFiltersAndRender();
+  });
+});
+
+/* =========================================
+   10. INITIAL START
+   =========================================
+   Τι γίνεται όταν φορτώνει η σελίδα.
+========================================= */
+
+applyFiltersAndRender();

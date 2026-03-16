@@ -2,61 +2,172 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knowledge Cards App</title>
-    <link rel="stylesheet" href="css/style.css">
+  <!-- =========================================
+       META
+  ========================================== -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- =========================================
+       TITLE
+  ========================================== -->
+  <title>Knowledge Cards App</title>
+
+  <!-- =========================================
+       STYLES
+  ========================================== -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <header class="app-header">
-        <h1>Knowledge Cards</h1>
 
-        <div class="controls">
-            <input type="text" id="searchInput" placeholder="Search cards...">
-            
-            <select id="sortSelect">
-                <option value="az">Title A–Z</option>
-                <option value="za">Title Z–A</option>
-                <option value="newest">Newest</option>
-                <option value="category">Category</option>
-            </select>
+  <!-- =========================================
+       HEADER
+  ========================================== -->
+  <header class="app-header">
 
-            <button id="addCardBtn">+ Add Card</button>
-        </div>
-    </header>
+    <h1>Knowledge Cards</h1>
 
-    <main class="cards-container" id="cardsContainer"></main>
+    <div class="controls">
 
-    <div class="modal hidden" id="cardModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New Card</h2>
-                <button type="button" class="close-btn" id="closeModalBtn">×</button>
-            </div>
+      <!-- SEARCH -->
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search cards..."
+      >
 
-            <form id="cardForm">
-                <div class="form-group">
-                    <label for="categoryInput">Category</label>
-                    <input type="text" id="categoryInput" required>
-                </div>
+      <!-- SORT -->
+      <select id="sortSelect">
+        <option value="az">Title A–Z</option>
+        <option value="za">Title Z–A</option>
+        <option value="newest">Newest</option>
+        <option value="category">Category</option>
+      </select>
 
-                <div class="form-group">
-                    <label for="titleInput">Title</label>
-                    <input type="text" id="titleInput" required>
-                </div>
+      <!-- ADD BUTTON -->
+      <button id="addCardBtn">
+        + Add Card
+      </button>
 
-                <div class="form-group">
-                    <label for="contentInput">Content</label>
-                    <textarea id="contentInput" rows="5" required></textarea>
-                </div>
-
-                <button type="submit" class="submit-btn">Save Card</button>
-            </form>
-        </div>
     </div>
 
-    <script src="js/script.js"></script>
+  </header>
+
+
+  <!-- =========================================
+       COLLECTIONS BAR
+  ========================================== -->
+  <section class="collections-bar">
+
+    <button
+      class="collection-btn active"
+      data-collection="photos"
+    >
+      📸 Photo Moments
+    </button>
+
+    <button
+      class="collection-btn"
+      data-collection="recipes"
+    >
+      🍳 Recipes
+    </button>
+
+    <button
+      class="collection-btn"
+      data-collection="travel"
+    >
+      ✈️ Travel Destinations
+    </button>
+
+  </section>
+
+
+  <!-- =========================================
+       CARDS CONTAINER
+  ========================================== -->
+  <main
+    class="cards-container"
+    id="cardsContainer"
+  >
+  </main>
+
+
+  <!-- =========================================
+       MODAL
+  ========================================== -->
+  <div
+    class="modal hidden"
+    id="cardModal"
+  >
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Card</h2>
+
+        <button
+          type="button"
+          class="close-btn"
+          id="closeModalBtn"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- FORM -->
+      <form id="cardForm">
+
+        <div class="form-group">
+          <label for="categoryInput">Category</label>
+
+          <input
+            type="text"
+            id="categoryInput"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="titleInput">Title</label>
+
+          <input
+            type="text"
+            id="titleInput"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="contentInput">Content</label>
+
+          <textarea
+            id="contentInput"
+            rows="5"
+            required
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="submit-btn"
+        >
+          Save Card
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       JAVASCRIPT
+  ========================================== -->
+  <script src="js/script.js"></script>
+
 </body>
 
 </html>
