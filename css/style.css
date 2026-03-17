@@ -6,11 +6,29 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-soft: #fafafa;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --radius: 14px;
+  --radius-lg: 18px;
+  --dark: #222222;
+  --green: #2ecc71;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  color: #222;
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* =========================================
@@ -18,74 +36,89 @@ body {
 ========================================= */
 
 .app-header {
-  background: white;
-  padding: 20px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.app-header h1 {
+.header-top h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.header-search {
+  margin-top: 12px;
+}
+
+.header-actions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.header-install {
+  margin-top: 10px;
 }
 
 /* =========================================
-   3. TOP CONTROLS
+   3. CONTROLS
 ========================================= */
 
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
+#searchInput,
+#sortSelect,
+#addCardBtn,
+#installBtn {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 16px;
 }
 
 #searchInput {
-  width: 260px;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  width: 100%;
+  padding: 0 14px;
+  border: 1px solid var(--border);
   outline: none;
-  background: white;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+#searchInput::placeholder {
+  color: #9ca3af;
 }
 
 #sortSelect {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--border);
   outline: none;
-  background: white;
+  background: var(--surface-soft);
+  color: var(--text);
 }
 
 #addCardBtn {
-  padding: 10px 16px;
   border: none;
-  border-radius: 8px;
-  background: #222;
+  background: var(--dark);
   color: white;
+  padding: 0 16px;
   cursor: pointer;
-  font-size: 14px;
-}
-
-#addCardBtn:hover {
-  opacity: 0.9;
 }
 
 #installBtn {
-  background: #2ecc71;
+  width: 100%;
+  background: var(--green);
   color: white;
   border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 0 16px;
   cursor: pointer;
-  font-size: 14px;
 }
 
+#addCardBtn:hover,
 #installBtn:hover {
   opacity: 0.95;
 }
@@ -95,26 +128,33 @@ body {
 ========================================= */
 
 .collections-bar {
-  max-width: 900px;
-  margin: 20px auto 0;
-  padding: 0 24px;
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 14px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.collections-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .collection-btn {
   border: none;
-  background: white;
+  background: var(--surface);
   padding: 10px 14px;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   font-size: 14px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  color: var(--text);
 }
 
 .collection-btn.active {
-  background: #222;
+  background: var(--dark);
   color: white;
 }
 
@@ -123,22 +163,22 @@ body {
 ========================================= */
 
 .cards-container {
-  max-width: 900px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 /* =========================================
-   6. CARD LIST ITEM
+   6. CARD
 ========================================= */
 
 .card {
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
@@ -153,11 +193,12 @@ body {
 .card-toggle {
   width: 100%;
   border: none;
-  background: white;
-  padding: 18px 20px;
+  background: var(--surface);
+  padding: 16px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   text-align: left;
   cursor: pointer;
 }
@@ -168,19 +209,20 @@ body {
 
 .card-category {
   display: inline-block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  color: #666;
-  background: #f0f0f0;
+  color: var(--muted);
+  background: #f1f3f5;
   padding: 6px 10px;
   border-radius: 999px;
   flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
-  color: #222;
+  color: var(--text);
+  line-height: 1.35;
 }
 
 /* =========================================
@@ -188,8 +230,8 @@ body {
 ========================================= */
 
 .card-body {
-  padding: 0 20px 20px;
-  border-top: 1px solid #eee;
+  padding: 0 16px 16px;
+  border-top: 1px solid #eeeeee;
 }
 
 .hidden-content {
@@ -199,14 +241,16 @@ body {
 .card-image {
   width: 100%;
   border-radius: 10px;
-  margin: 16px 0 10px;
+  margin: 14px 0 10px;
   display: block;
+  object-fit: cover;
 }
 
 .card-content {
-  margin: 16px 0 20px;
-  line-height: 1.6;
+  margin: 14px 0 16px;
+  line-height: 1.55;
   color: #444;
+  font-size: 15px;
 }
 
 /* =========================================
@@ -214,26 +258,29 @@ body {
 ========================================= */
 
 .card-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .edit-btn,
 .delete-btn {
+  min-height: 42px;
   padding: 8px 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
 }
 
 .edit-btn {
   background: #e9ecef;
+  color: var(--text);
 }
 
 .delete-btn {
   background: #ffe3e3;
+  color: #7f1d1d;
 }
 
 /* =========================================
@@ -241,21 +288,22 @@ body {
 ========================================= */
 
 .empty-state {
-  background: white;
-  border-radius: 14px;
-  padding: 30px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 20px;
   text-align: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .empty-state h3 {
   margin-top: 0;
   margin-bottom: 8px;
+  font-size: 18px;
 }
 
 .empty-state p {
   margin: 0;
-  color: #666;
+  color: var(--muted);
 }
 
 /* =========================================
@@ -265,11 +313,11 @@ body {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  align-items: flex-end;
+  padding: 0;
 }
 
 .modal.hidden {
@@ -278,10 +326,12 @@ body {
 
 .modal-content {
   width: 100%;
-  max-width: 500px;
-  background: white;
-  border-radius: 18px;
-  padding: 24px;
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 16px 24px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
 }
 
@@ -294,7 +344,7 @@ body {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .close-btn {
@@ -303,6 +353,8 @@ body {
   font-size: 28px;
   cursor: pointer;
   line-height: 1;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 /* =========================================
@@ -325,26 +377,29 @@ body {
 .form-group textarea,
 .form-group select {
   padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   font-family: inherit;
   outline: none;
   background: white;
+  color: var(--text);
 }
 
 .form-group textarea {
   resize: vertical;
+  min-height: 120px;
 }
 
 .submit-btn {
   width: 100%;
+  min-height: 46px;
   border: none;
-  background: #222;
+  background: var(--dark);
   color: white;
   padding: 12px 16px;
-  font-size: 15px;
-  border-radius: 10px;
+  font-size: 16px;
+  border-radius: 12px;
   cursor: pointer;
 }
 
@@ -353,153 +408,84 @@ body {
 }
 
 /* =========================================
-   13. RESPONSIVE
+   13. DESKTOP / TABLET
 ========================================= */
 
-@media (max-width: 768px) {
-  body {
-    background: #f3f4f6;
-  }
-
+@media (min-width: 769px) {
   .app-header {
-    padding: 14px 14px 10px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    padding: 20px 30px;
   }
 
-  .app-header h1 {
-    font-size: 22px;
-    line-height: 1.2;
+  .header-top h1 {
+    font-size: 28px;
   }
 
-  .controls {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+  .header-search {
+    margin-top: 14px;
   }
 
-  #searchInput,
-  #sortSelect,
-  #addCardBtn,
-  #installBtn {
-    width: 100%;
-    min-height: 44px;
-    font-size: 16px;
+  .header-actions {
+    grid-template-columns: 220px auto;
+    justify-content: start;
+  }
+
+  .header-install {
+    width: 220px;
   }
 
   .collections-bar {
-    margin-top: 12px;
-    padding: 0 14px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .collection-btn {
-    width: 100%;
-    text-align: left;
-    padding: 12px 14px;
-    font-size: 15px;
-    border-radius: 12px;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 18px 24px 0;
   }
 
   .cards-container {
-    padding: 14px;
-    gap: 10px;
-  }
-
-  .card {
-    border-radius: 12px;
+    padding: 24px;
   }
 
   .card-toggle {
-    padding: 14px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .card-category {
-    font-size: 11px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
   }
 
   .card-title {
-    font-size: 16px;
-    line-height: 1.35;
-  }
-
-  .card-body {
-    padding: 0 14px 14px;
-  }
-
-  .card-image {
-    margin: 14px 0 10px;
-    border-radius: 8px;
-  }
-
-  .card-content {
-    font-size: 15px;
-    line-height: 1.5;
-    margin: 12px 0 16px;
+    font-size: 18px;
   }
 
   .card-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: flex;
+    gap: 10px;
   }
 
   .edit-btn,
   .delete-btn {
-    width: 100%;
-    min-height: 42px;
-    font-size: 14px;
+    min-height: auto;
   }
 
   .modal {
-    padding: 0;
-    align-items: flex-end;
-    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    align-items: center;
   }
 
   .modal-content {
-    width: 100%;
-    max-width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-radius: 18px 18px 0 0;
-    padding: 18px 14px 24px;
+    max-width: 540px;
+    border-radius: 18px;
+    padding: 24px;
   }
 
   .modal-header h2 {
-    font-size: 20px;
-  }
-
-  .close-btn {
-    min-width: 40px;
-    min-height: 40px;
-  }
-
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    font-size: 16px;
-    min-height: 44px;
-  }
-
-  .submit-btn {
-    min-height: 46px;
-    font-size: 16px;
+    font-size: 24px;
   }
 }
 
+/* =========================================
+   14. SAFE AREA SUPPORT
+========================================= */
+
 @supports (padding: max(0px)) {
   .app-header {
-    padding-top: max(14px, env(safe-area-inset-top));
+    padding-top: max(16px, env(safe-area-inset-top));
   }
 
   .modal-content {
