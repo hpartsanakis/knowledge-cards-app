@@ -352,9 +352,15 @@ function getStudyQueue() {
     selectedCategory === "all" || card.category === selectedCategory
   ));
 
-  return cardsInCategory
-    .filter((card) => studyMode === "learn" || isReadyToReview(card))
+  const sortedCards = [...cardsInCategory]
     .sort((a, b) => normalizeReviewState(a.review).box - normalizeReviewState(b.review).box);
+
+  if (studyMode === "learn") {
+    return sortedCards;
+  }
+
+  const readyCards = sortedCards.filter(isReadyToReview);
+  return readyCards.length > 0 ? readyCards : sortedCards;
 }
 
 function renderStudyCard() {
@@ -477,6 +483,11 @@ function updateStudySummary() {
     studySummary.textContent = scopedCards.length === 1
       ? `1 Karte zum Anlernen${categoryText}`
       : `${scopedCards.length} Karten zum Anlernen${categoryText}`;
+    return;
+  }
+
+  if (openCards === 0 && scopedCards.length > 0) {
+    studySummary.textContent = `0 bereit · ${scopedCards.length} Karten im Stapel${categoryText}`;
     return;
   }
 
