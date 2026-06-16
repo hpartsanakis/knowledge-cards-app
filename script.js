@@ -347,20 +347,12 @@ function startStudySession() {
 
 function getStudyQueue() {
   const selectedCategory = getStudyCategory();
-  const studyMode = getStudyMode();
   const cardsInCategory = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
 
-  const sortedCards = [...cardsInCategory]
+  return [...cardsInCategory]
     .sort((a, b) => normalizeReviewState(a.review).box - normalizeReviewState(b.review).box);
-
-  if (studyMode === "learn") {
-    return sortedCards;
-  }
-
-  const readyCards = sortedCards.filter(isReadyToReview);
-  return readyCards.length > 0 ? readyCards : sortedCards;
 }
 
 function renderStudyCard() {
@@ -472,28 +464,14 @@ function updateStats() {
 
 function updateStudySummary() {
   const selectedCategory = getStudyCategory();
-  const studyMode = getStudyMode();
   const scopedCards = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
-  const openCards = scopedCards.filter(isReadyToReview).length;
   const categoryText = selectedCategory === "all" ? "" : ` in ${selectedCategory}`;
 
-  if (studyMode === "learn") {
-    studySummary.textContent = scopedCards.length === 1
-      ? `1 Karte zum Anlernen${categoryText}`
-      : `${scopedCards.length} Karten zum Anlernen${categoryText}`;
-    return;
-  }
-
-  if (openCards === 0 && scopedCards.length > 0) {
-    studySummary.textContent = `0 bereit · ${scopedCards.length} Karten im Stapel${categoryText}`;
-    return;
-  }
-
-  studySummary.textContent = openCards === 1
-    ? `1 Karte bereit${categoryText}`
-    : `${openCards} Karten bereit${categoryText}`;
+  studySummary.textContent = scopedCards.length === 1
+    ? `1 Karte im Test${categoryText}`
+    : `${scopedCards.length} Karten im Test${categoryText}`;
 }
 
 function updateCardReviewMeta(node, card) {
