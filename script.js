@@ -313,11 +313,12 @@ function startStudySession() {
     studySession.hidden = false;
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
-    studyQuestion.textContent = "Keine faelligen Karten";
+    studyQuestion.textContent = "Noch keine Karten vorhanden";
     studyAnswer.hidden = true;
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
     skipStudyButton.hidden = true;
+    scrollStudySessionIntoView();
     return;
   }
 
@@ -325,12 +326,19 @@ function startStudySession() {
   revealAnswerButton.hidden = false;
   skipStudyButton.hidden = false;
   renderStudyCard();
+  scrollStudySessionIntoView();
 }
 
 function getStudyQueue() {
-  return cards
+  const dueCards = cards
     .filter(isDue)
     .sort((a, b) => a.review.dueAt - b.review.dueAt);
+
+  if (dueCards.length > 0) {
+    return dueCards;
+  }
+
+  return [...cards].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
 }
 
 function renderStudyCard() {
@@ -386,6 +394,13 @@ function handleStudyRating(event) {
     studyIndex = 0;
   }
   renderStudyCard();
+}
+
+function scrollStudySessionIntoView() {
+  studySession.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
 function calculateNextReview(review, rating) {
