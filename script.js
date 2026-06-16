@@ -323,9 +323,7 @@ function startStudySession() {
     studySession.hidden = false;
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
-    studyQuestion.textContent = getStudyMode() === "normal"
-      ? "Keine Karte ist gerade bereit"
-      : "Noch keine Karten in dieser Auswahl";
+    studyQuestion.textContent = "Keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
     studyUserAnswer.value = "";
     studyUserAnswer.hidden = true;
@@ -350,8 +348,9 @@ function getStudyQueue() {
   const cardsInCategory = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
+  const sourceCards = cardsInCategory.length > 0 ? cardsInCategory : cards;
 
-  return [...cardsInCategory]
+  return [...sourceCards]
     .sort((a, b) => normalizeReviewState(a.review).box - normalizeReviewState(b.review).box);
 }
 
