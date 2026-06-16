@@ -369,10 +369,24 @@ textarea:focus {
 
 .study-panel {
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 16px;
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+.study-category-picker {
+  display: grid;
+  gap: 5px;
+  min-width: 190px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.study-category-picker select {
+  min-height: 40px;
 }
 
 .study-panel .primary-action {
@@ -380,8 +394,17 @@ textarea:focus {
   padding: 0 16px;
 }
 
-.study-panel .primary-action[aria-pressed="true"] {
-  background: var(--focus);
+#dueFilter {
+  color: var(--focus);
+  background: var(--focus-soft);
+  border-color: rgba(49, 95, 150, 0.24);
+}
+
+#dueFilter[aria-pressed="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--focus));
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(31, 122, 109, 0.16);
 }
 
 .study-session {
@@ -739,6 +762,10 @@ textarea:focus {
     flex-basis: auto;
     width: 100%;
     max-width: none;
+  }
+
+  .study-category-picker {
+    width: 100%;
   }
 
   .icon-button {

@@ -88,6 +88,7 @@ const signOutButton = document.querySelector("#signOutButton");
 const startStudyButton = document.querySelector("#startStudyButton");
 const studySession = document.querySelector("#studySession");
 const studySummary = document.querySelector("#studySummary");
+const studyCategorySelect = document.querySelector("#studyCategorySelect");
 const studyProgress = document.querySelector("#studyProgress");
 const studyCategory = document.querySelector("#studyCategory");
 const studyQuestion = document.querySelector("#studyQuestion");
@@ -103,6 +104,7 @@ form.addEventListener("submit", handleSubmit);
 resetButton.addEventListener("click", resetForm);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
+studyCategorySelect.addEventListener("change", updateStudySummary);
 favoriteFilter.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
   favoriteFilter.setAttribute("aria-pressed", String(showFavoritesOnly));
@@ -175,6 +177,7 @@ function handleSubmit(event) {
 
 function render() {
   updateCategoryFilter();
+  updateStudyCategoryOptions();
   const visibleCards = getVisibleCards();
   cardsGrid.innerHTML = "";
 
@@ -330,7 +333,11 @@ function startStudySession() {
 }
 
 function getStudyQueue() {
-  const dueCards = cards
+  const selectedCategory = studyCategorySelect.value;
+  const cardsInCategory = cards.filter((card) => (
+    selectedCategory === "all" || card.category === selectedCategory
+  ));
+  const dueCards = cardsInCategory
     .filter(isDue)
     .sort((a, b) => a.review.dueAt - b.review.dueAt);
 
@@ -338,7 +345,7 @@ function getStudyQueue() {
     return dueCards;
   }
 
-  return [...cards].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+  return [...cardsInCategory].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
 }
 
 function renderStudyCard() {
@@ -447,10 +454,16 @@ function updateStats() {
 }
 
 function updateStudySummary() {
-  const dueCards = cards.filter(isDue).length;
+  const selectedCategory = studyCategorySelect.value;
+  const scopedCards = cards.filter((card) => (
+    selectedCategory === "all" || card.category === selectedCategory
+  ));
+  const dueCards = scopedCards.filter(isDue).length;
+  const categoryText = selectedCategory === "all" ? "" : ` in ${selectedCategory}`;
+
   studySummary.textContent = dueCards === 1
     ? "1 Karte faellig"
-    : `${dueCards} Karten faellig`;
+    : `${dueCards} Karten faellig${categoryText}`;
 }
 
 function updateCardReviewMeta(node, card) {
@@ -476,6 +489,21 @@ function updateCategoryFilter() {
   });
 
   categoryFilter.value = categories.includes(currentValue) ? currentValue : "all";
+}
+
+function updateStudyCategoryOptions() {
+  const currentValue = studyCategorySelect.value;
+  const categories = [...new Set(cards.map((card) => card.category))].sort((a, b) => a.localeCompare(b));
+
+  studyCategorySelect.innerHTML = '<option value="all">Alle Kategorien</option>';
+  categories.forEach((category) => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    studyCategorySelect.append(option);
+  });
+
+  studyCategorySelect.value = categories.includes(currentValue) ? currentValue : "all";
 }
 
 function parseTags(value) {
