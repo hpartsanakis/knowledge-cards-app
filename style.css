@@ -163,6 +163,7 @@ textarea:focus {
 .auth-actions,
 .timer-actions,
 .study-panel,
+.study-controls,
 .review-actions {
   display: flex;
   align-items: center;
@@ -381,6 +382,84 @@ textarea:focus {
 
 .study-panel .primary-action[aria-pressed="true"] {
   background: var(--focus);
+}
+
+.study-session {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.study-session[hidden] {
+  display: none;
+}
+
+.study-card {
+  display: grid;
+  gap: 14px;
+}
+
+.study-card-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.study-card h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.study-answer {
+  padding: 16px;
+  background: #f8faf7;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.study-answer[hidden],
+.study-rating[hidden] {
+  display: none;
+}
+
+.study-answer p:last-child {
+  margin: 0;
+  color: #344044;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.study-controls {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.study-controls .primary-action,
+.study-controls .secondary-action {
+  flex: 0 1 auto;
+  padding: 0 16px;
+}
+
+.study-rating {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.study-rating button {
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-weight: 850;
 }
 
 .cards-grid {
@@ -648,6 +727,7 @@ textarea:focus {
   .auth-actions,
   .timer-actions,
   .study-panel,
+  .study-controls,
   .knowledge-card footer,
   .dialog-actions {
     align-items: stretch;
@@ -675,5 +755,9 @@ textarea:focus {
 
   .review-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .study-rating {
+    grid-template-columns: 1fr;
   }
 }

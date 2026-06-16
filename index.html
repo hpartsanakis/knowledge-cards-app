@@ -51,14 +51,14 @@
         <form id="cardForm" class="card-form">
           <input type="hidden" id="cardId">
 
-          <label for="title">Titel</label>
-          <input id="title" name="title" type="text" placeholder="z. B. CSS Grid" required>
+          <label for="title">Frage / Vorderseite</label>
+          <input id="title" name="title" type="text" placeholder="z. B. Was ist CSS Grid?" required>
 
           <label for="category">Kategorie</label>
           <input id="category" name="category" type="text" placeholder="z. B. Frontend" required>
 
-          <label for="content">Inhalt</label>
-          <textarea id="content" name="content" rows="8" placeholder="Wichtiges Wissen hier sammeln..." required></textarea>
+          <label for="content">Antwort / Rueckseite</label>
+          <textarea id="content" name="content" rows="8" placeholder="Die Antwort, die du aktiv erinnern willst..." required></textarea>
 
           <label for="tags">Tags</label>
           <input id="tags" name="tags" type="text" placeholder="html, css, layout">
@@ -122,9 +122,35 @@
         <section class="study-panel" aria-label="Spaced Repetition">
           <div>
             <p class="panel-kicker">Spaced Repetition</p>
-            <h2>Heute wiederholen</h2>
+            <h2 id="studySummary">Heute wiederholen</h2>
           </div>
+          <button class="primary-action" id="startStudyButton" type="button">Lernen starten</button>
           <button class="primary-action" id="dueFilter" type="button" aria-pressed="false">Fällige Karten</button>
+        </section>
+
+        <section class="study-session" id="studySession" aria-label="Karteikarten Test" hidden>
+          <div class="study-card">
+            <div class="study-card-topline">
+              <span id="studyProgress">0 / 0</span>
+              <span id="studyCategory"></span>
+            </div>
+            <p class="panel-kicker">Vorderseite</p>
+            <h2 id="studyQuestion"></h2>
+            <div class="study-answer" id="studyAnswer" hidden>
+              <p class="panel-kicker">Rueckseite</p>
+              <p id="studyAnswerText"></p>
+            </div>
+            <div class="study-controls">
+              <button class="primary-action" id="revealAnswerButton" type="button">Antwort zeigen</button>
+              <button class="secondary-action" id="skipStudyButton" type="button">Ueberspringen</button>
+            </div>
+            <div class="study-rating" id="studyRating" hidden>
+              <button class="review-again" data-rating="again" type="button">Nicht gewusst</button>
+              <button class="review-hard" data-rating="hard" type="button">Unsicher</button>
+              <button class="review-good" data-rating="good" type="button">Gewusst</button>
+              <button class="review-easy" data-rating="easy" type="button">Sehr sicher</button>
+            </div>
+          </div>
         </section>
 
         <section id="cardsGrid" class="cards-grid" aria-label="Gespeicherte Karten"></section>

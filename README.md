@@ -10,6 +10,7 @@ Eine kleine Vanilla-HTML/CSS/JS-App zum Erstellen, Lesen, Bearbeiten und Loesche
 - Favoriten-Filter
 - Spaced Repetition mit Bewertungen: Nochmal, Schwer, Gut, Einfach
 - Anzeige faelliger Karten
+- Echter Karteikarten-Testmodus mit verdeckter Antwort
 - Pomodoro-Timer mit Fokus- und Pausenzeit
 - PWA-ready fuer iPhone Home Screen und Offline-Nutzung
 - Optionaler Supabase Sync fuer MacBook und iPhone
@@ -21,6 +22,8 @@ Eine kleine Vanilla-HTML/CSS/JS-App zum Erstellen, Lesen, Bearbeiten und Loesche
 Die App kombiniert Active Recall mit Spaced Repetition und Pomodoro:
 
 - Eine Karte aktiv erinnern.
+- Im Lernmodus erst die Frage lesen und die Antwort selbst formulieren.
+- Danach die Rueckseite aufdecken.
 - Danach mit Nochmal, Schwer, Gut oder Einfach bewerten.
 - Die App plant automatisch den naechsten Wiederholungstermin.
 - Mit dem Pomodoro-Timer lernst du in konzentrierten Fokus-Einheiten.

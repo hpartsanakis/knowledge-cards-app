@@ -1,4 +1,4 @@
-const CACHE_NAME = "knowledge-cards-v3";
+const CACHE_NAME = "knowledge-cards-v4";
 const APP_SHELL = [
   "./",
   "./index.html",

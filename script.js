@@ -44,6 +44,9 @@ let timerId = null;
 let supabaseClient = null;
 let currentUser = null;
 let syncInProgress = false;
+let studyQueue = [];
+let studyIndex = 0;
+let answerVisible = false;
 
 const form = document.querySelector("#cardForm");
 const cardIdInput = document.querySelector("#cardId");
@@ -82,6 +85,17 @@ const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
 const signUpButton = document.querySelector("#signUpButton");
 const signOutButton = document.querySelector("#signOutButton");
+const startStudyButton = document.querySelector("#startStudyButton");
+const studySession = document.querySelector("#studySession");
+const studySummary = document.querySelector("#studySummary");
+const studyProgress = document.querySelector("#studyProgress");
+const studyCategory = document.querySelector("#studyCategory");
+const studyQuestion = document.querySelector("#studyQuestion");
+const studyAnswer = document.querySelector("#studyAnswer");
+const studyAnswerText = document.querySelector("#studyAnswerText");
+const revealAnswerButton = document.querySelector("#revealAnswerButton");
+const skipStudyButton = document.querySelector("#skipStudyButton");
+const studyRating = document.querySelector("#studyRating");
 
 let pendingDeleteId = "";
 
@@ -108,6 +122,10 @@ timerReset.addEventListener("click", resetTimer);
 authForm.addEventListener("submit", signIn);
 signUpButton.addEventListener("click", signUp);
 signOutButton.addEventListener("click", signOut);
+startStudyButton.addEventListener("click", startStudySession);
+revealAnswerButton.addEventListener("click", revealStudyAnswer);
+skipStudyButton.addEventListener("click", skipStudyCard);
+studyRating.addEventListener("click", handleStudyRating);
 
 initializeTimerControls();
 render();
@@ -195,6 +213,7 @@ function render() {
   emptyState.hidden = visibleCards.length > 0;
   cardsGrid.hidden = visibleCards.length === 0;
   updateStats();
+  updateStudySummary();
 }
 
 function getVisibleCards() {
@@ -285,6 +304,90 @@ function reviewCard(id, rating) {
   render();
 }
 
+function startStudySession() {
+  studyQueue = getStudyQueue();
+  studyIndex = 0;
+  answerVisible = false;
+
+  if (studyQueue.length === 0) {
+    studySession.hidden = false;
+    studyProgress.textContent = "0 / 0";
+    studyCategory.textContent = "";
+    studyQuestion.textContent = "Keine faelligen Karten";
+    studyAnswer.hidden = true;
+    studyRating.hidden = true;
+    revealAnswerButton.hidden = true;
+    skipStudyButton.hidden = true;
+    return;
+  }
+
+  studySession.hidden = false;
+  revealAnswerButton.hidden = false;
+  skipStudyButton.hidden = false;
+  renderStudyCard();
+}
+
+function getStudyQueue() {
+  return cards
+    .filter(isDue)
+    .sort((a, b) => a.review.dueAt - b.review.dueAt);
+}
+
+function renderStudyCard() {
+  const card = studyQueue[studyIndex];
+  if (!card) {
+    studyProgress.textContent = `${studyQueue.length} / ${studyQueue.length}`;
+    studyCategory.textContent = "";
+    studyQuestion.textContent = "Lerneinheit abgeschlossen";
+    studyAnswer.hidden = true;
+    studyRating.hidden = true;
+    revealAnswerButton.hidden = true;
+    skipStudyButton.hidden = true;
+    updateStudySummary();
+    return;
+  }
+
+  answerVisible = false;
+  studyProgress.textContent = `${studyIndex + 1} / ${studyQueue.length}`;
+  studyCategory.textContent = card.category;
+  studyQuestion.textContent = card.title;
+  studyAnswerText.textContent = card.content;
+  studyAnswer.hidden = true;
+  studyRating.hidden = true;
+  revealAnswerButton.hidden = false;
+  revealAnswerButton.textContent = "Antwort zeigen";
+  skipStudyButton.hidden = false;
+}
+
+function revealStudyAnswer() {
+  answerVisible = true;
+  studyAnswer.hidden = false;
+  studyRating.hidden = false;
+  revealAnswerButton.hidden = true;
+}
+
+function skipStudyCard() {
+  if (studyQueue.length === 0) return;
+  studyIndex = (studyIndex + 1) % studyQueue.length;
+  renderStudyCard();
+}
+
+function handleStudyRating(event) {
+  const rating = event.target.dataset.rating;
+  if (!rating || !answerVisible) return;
+
+  const card = studyQueue[studyIndex];
+  if (!card) return;
+
+  reviewCard(card.id, rating);
+  studyQueue.splice(studyIndex, 1);
+
+  if (studyIndex >= studyQueue.length) {
+    studyIndex = 0;
+  }
+  renderStudyCard();
+}
+
 function calculateNextReview(review, rating) {
   const current = normalizeReviewState(review);
   const intervalMap = {
@@ -326,6 +429,13 @@ function updateStats() {
   dueCount.textContent = cards.filter(isDue).length;
   favoriteCount.textContent = cards.filter((card) => card.favorite).length;
   categoryCount.textContent = categories.size;
+}
+
+function updateStudySummary() {
+  const dueCards = cards.filter(isDue).length;
+  studySummary.textContent = dueCards === 1
+    ? "1 Karte faellig"
+    : `${dueCards} Karten faellig`;
 }
 
 function updateCardReviewMeta(node, card) {
