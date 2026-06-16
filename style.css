@@ -394,19 +394,6 @@ textarea:focus {
   padding: 0 16px;
 }
 
-#dueFilter {
-  color: var(--focus);
-  background: var(--focus-soft);
-  border-color: rgba(49, 95, 150, 0.24);
-}
-
-#dueFilter[aria-pressed="true"] {
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--focus));
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(31, 122, 109, 0.16);
-}
-
 .study-session {
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid var(--line);
@@ -571,7 +558,7 @@ textarea:focus {
   font-weight: 750;
 }
 
-.review-meta .is-due {
+.review-meta .is-learned {
   color: var(--focus);
   background: var(--focus-soft);
   border-color: rgba(49, 95, 150, 0.22);

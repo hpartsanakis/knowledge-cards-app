@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Knowledge Cards">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Knowledge Cards">
-  <meta name="description" content="Eine PWA fuer Lernkarten, Spaced Repetition und Pomodoro-Fokus.">
+  <meta name="description" content="Eine PWA fuer Karteikarten, aktive Tests und Pomodoro-Fokus.">
   <title>Knowledge Cards</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
@@ -91,7 +91,7 @@
             <button class="secondary-action" id="timerPause" type="button">Pause</button>
             <button class="secondary-action" id="timerReset" type="button">Reset</button>
           </div>
-          <p class="timer-note" id="timerNote">Lerne eine fällige Karte, dann bewerte sie.</p>
+          <p class="timer-note" id="timerNote">Teste eine Karte, vergleiche deine Antwort und bewerte sie.</p>
         </section>
       </aside>
 
@@ -114,15 +114,15 @@
 
         <div class="stats" aria-live="polite">
           <span><strong id="totalCount">0</strong> Karten</span>
-          <span><strong id="dueCount">0</strong> fällige</span>
+          <span><strong id="openCount">0</strong> offen</span>
           <span><strong id="favoriteCount">0</strong> Favoriten</span>
           <span><strong id="categoryCount">0</strong> Kategorien</span>
         </div>
 
-        <section class="study-panel" aria-label="Spaced Repetition">
+        <section class="study-panel" aria-label="Karteikarten Test">
           <div>
-            <p class="panel-kicker">Spaced Repetition</p>
-            <h2 id="studySummary">Heute wiederholen</h2>
+            <p class="panel-kicker">Karteikarten Test</p>
+            <h2 id="studySummary">Offene Karten</h2>
           </div>
           <label class="study-category-picker" for="studyCategorySelect">
             <span>Kategorie</span>
@@ -133,12 +133,11 @@
           <label class="study-category-picker" for="studyModeSelect">
             <span>Modus</span>
             <select id="studyModeSelect">
-              <option value="review">Wiederholen</option>
+              <option value="normal">Normal</option>
               <option value="learn">Anlernen</option>
             </select>
           </label>
-          <button class="primary-action" id="startStudyButton" type="button">Lernen starten</button>
-          <button class="primary-action" id="dueFilter" type="button" aria-pressed="false">Fällige Karten</button>
+          <button class="primary-action" id="startStudyButton" type="button">Test starten</button>
         </section>
 
         <section class="study-session" id="studySession" aria-label="Karteikarten Test" hidden>
@@ -212,16 +211,16 @@
         <button class="favorite-button" type="button" title="Favorit umschalten" aria-label="Favorit umschalten">☆</button>
       </header>
       <div class="review-meta">
-        <span class="due-label"></span>
+        <span class="status-label"></span>
         <span class="review-count"></span>
       </div>
       <p class="card-content"></p>
       <div class="tag-list"></div>
       <div class="review-actions" aria-label="Karte bewerten">
-        <button class="review-again" type="button">Nochmal</button>
-        <button class="review-hard" type="button">Schwer</button>
-        <button class="review-good" type="button">Gut</button>
-        <button class="review-easy" type="button">Einfach</button>
+        <button class="review-again" type="button">Nicht gewusst</button>
+        <button class="review-hard" type="button">Unsicher</button>
+        <button class="review-good" type="button">Gewusst</button>
+        <button class="review-easy" type="button">Sehr sicher</button>
       </div>
       <footer>
         <button class="secondary-action edit-button" type="button">Bearbeiten</button>

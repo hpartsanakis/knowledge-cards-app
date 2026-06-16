@@ -1,6 +1,5 @@
 const STORAGE_KEY = "knowledge-cards-app.cards";
 const TIMER_KEY = "knowledge-cards-app.timer";
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const SUPABASE_TABLE = "knowledge_cards";
 
 const sampleCards = [
@@ -11,7 +10,7 @@ const sampleCards = [
     content: "Create, Read, Update und Delete sind die vier Basisaktionen fuer datengetriebene Apps.",
     tags: ["crud", "app", "basis"],
     favorite: true,
-    review: createReviewState(Date.now() - DAY_IN_MS),
+    review: createReviewState(),
     createdAt: Date.now() - 3000
   },
   {
@@ -21,7 +20,7 @@ const sampleCards = [
     content: "localStorage speichert Textdaten dauerhaft im Browser. Vor dem Speichern werden Objekte mit JSON.stringify umgewandelt.",
     tags: ["browser", "storage", "json"],
     favorite: false,
-    review: createReviewState(Date.now()),
+    review: createReviewState(),
     createdAt: Date.now() - 2000
   },
   {
@@ -31,14 +30,13 @@ const sampleCards = [
     content: "Grid eignet sich fuer zweidimensionale Layouts. Mit auto-fill und minmax entstehen flexible Kartenraster.",
     tags: ["css", "layout"],
     favorite: false,
-    review: createReviewState(Date.now() + DAY_IN_MS),
+    review: createReviewState(),
     createdAt: Date.now() - 1000
   }
 ];
 
 let cards = normalizeCards(loadCards());
 let showFavoritesOnly = false;
-let showDueOnly = false;
 let timerState = loadTimerState();
 let timerId = null;
 let supabaseClient = null;
@@ -47,6 +45,7 @@ let syncInProgress = false;
 let studyQueue = [];
 let studyIndex = 0;
 let answerVisible = false;
+let testActive = false;
 
 const form = document.querySelector("#cardForm");
 const cardIdInput = document.querySelector("#cardId");
@@ -64,12 +63,11 @@ const cardsGrid = document.querySelector("#cardsGrid");
 const emptyState = document.querySelector("#emptyState");
 const cardTemplate = document.querySelector("#cardTemplate");
 const totalCount = document.querySelector("#totalCount");
-const dueCount = document.querySelector("#dueCount");
+const openCount = document.querySelector("#openCount");
 const favoriteCount = document.querySelector("#favoriteCount");
 const categoryCount = document.querySelector("#categoryCount");
 const deleteDialog = document.querySelector("#deleteDialog");
 const deleteDialogText = document.querySelector("#deleteDialogText");
-const dueFilter = document.querySelector("#dueFilter");
 const timerDisplay = document.querySelector("#timerDisplay");
 const pomodoroMode = document.querySelector("#pomodoroMode");
 const timerNote = document.querySelector("#timerNote");
@@ -112,11 +110,6 @@ studyModeSelect.addEventListener("change", render);
 favoriteFilter.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
   favoriteFilter.setAttribute("aria-pressed", String(showFavoritesOnly));
-  render();
-});
-dueFilter.addEventListener("click", () => {
-  showDueOnly = true;
-  studyModeSelect.value = "review";
   render();
 });
 deleteDialog.addEventListener("close", handleDeleteDialogClose);
@@ -166,7 +159,7 @@ function handleSubmit(event) {
       {
         id: crypto.randomUUID(),
         ...cardData,
-        review: createReviewState(Date.now()),
+        review: createReviewState(),
         createdAt: Date.now()
       },
       ...cards
@@ -182,7 +175,6 @@ function handleSubmit(event) {
 function render() {
   updateCategoryFilter();
   updateStudyCategoryOptions();
-  dueFilter.setAttribute("aria-pressed", String(studyModeSelect.value === "review"));
   const visibleCards = getVisibleCards();
   cardsGrid.innerHTML = "";
 
@@ -218,8 +210,8 @@ function render() {
     cardsGrid.append(node);
   });
 
-  emptyState.hidden = visibleCards.length > 0;
-  cardsGrid.hidden = visibleCards.length === 0;
+  emptyState.hidden = testActive || visibleCards.length > 0;
+  cardsGrid.hidden = testActive || visibleCards.length === 0;
   updateStats();
   updateStudySummary();
 }
@@ -241,13 +233,13 @@ function getVisibleCards() {
       const matchesSearch = searchableText.includes(searchTerm);
       const matchesCategory = selectedCategory === "all" || card.category === selectedCategory;
       const matchesFavorite = !showFavoritesOnly || card.favorite;
-      const matchesDue = studyMode === "learn" || isDue(card);
+      const matchesMode = studyMode === "learn" || !isLearned(card);
 
-      return matchesSearch && matchesCategory && matchesFavorite && matchesDue;
+      return matchesSearch && matchesCategory && matchesFavorite && matchesMode;
     })
     .sort((a, b) => {
-      const dueDiff = a.review.dueAt - b.review.dueAt;
-      return dueDiff || (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
+      const boxDiff = normalizeReviewState(a.review).box - normalizeReviewState(b.review).box;
+      return boxDiff || (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
     });
 }
 
@@ -304,7 +296,7 @@ function reviewCard(id, rating) {
     if (card.id !== id) return card;
     return {
       ...card,
-      review: calculateNextReview(card.review, rating),
+      review: calculateCardStatus(card.review, rating),
       updatedAt: Date.now()
     };
   });
@@ -317,13 +309,14 @@ function startStudySession() {
   studyQueue = getStudyQueue();
   studyIndex = 0;
   answerVisible = false;
+  testActive = true;
 
   if (studyQueue.length === 0) {
     studySession.hidden = false;
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
-    studyQuestion.textContent = studyModeSelect.value === "review"
-      ? "Keine faelligen Karten in dieser Auswahl"
+    studyQuestion.textContent = studyModeSelect.value === "normal"
+      ? "Keine offenen Karten in dieser Auswahl"
       : "Noch keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
     studyUserAnswer.value = "";
@@ -331,6 +324,7 @@ function startStudySession() {
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
     skipStudyButton.hidden = true;
+    render();
     scrollStudySessionIntoView();
     return;
   }
@@ -339,6 +333,7 @@ function startStudySession() {
   revealAnswerButton.hidden = false;
   skipStudyButton.hidden = false;
   renderStudyCard();
+  render();
   scrollStudySessionIntoView();
 }
 
@@ -349,13 +344,9 @@ function getStudyQueue() {
     selectedCategory === "all" || card.category === selectedCategory
   ));
 
-  if (studyMode === "learn") {
-    return [...cardsInCategory].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
-  }
-
   return cardsInCategory
-    .filter(isDue)
-    .sort((a, b) => a.review.dueAt - b.review.dueAt);
+    .filter((card) => studyMode === "learn" || !isLearned(card))
+    .sort((a, b) => normalizeReviewState(a.review).box - normalizeReviewState(b.review).box);
 }
 
 function renderStudyCard() {
@@ -370,6 +361,8 @@ function renderStudyCard() {
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
     skipStudyButton.hidden = true;
+    testActive = false;
+    render();
     updateStudySummary();
     return;
   }
@@ -413,6 +406,14 @@ function handleStudyRating(event) {
   reviewCard(card.id, rating);
   studyQueue.splice(studyIndex, 1);
 
+  if (rating === "again" || rating === "hard") {
+    studyQueue.push({
+      ...card,
+      review: calculateCardStatus(card.review, rating),
+      updatedAt: Date.now()
+    });
+  }
+
   if (studyIndex >= studyQueue.length) {
     studyIndex = 0;
   }
@@ -426,31 +427,22 @@ function scrollStudySessionIntoView() {
   });
 }
 
-function calculateNextReview(review, rating) {
+function calculateCardStatus(review, rating) {
   const current = normalizeReviewState(review);
-  const intervalMap = {
-    again: 0,
-    hard: Math.max(1, Math.round(current.interval * 1.2)),
-    good: Math.max(1, Math.round(current.interval * current.ease)),
-    easy: Math.max(2, Math.round(current.interval * (current.ease + 0.7)))
+  const learned = rating === "good" || rating === "easy";
+  const boxChange = {
+    again: -1,
+    hard: 0,
+    good: 1,
+    easy: 2
   };
-  const easeChange = {
-    again: -0.25,
-    hard: -0.12,
-    good: 0.03,
-    easy: 0.15
-  };
-  const interval = intervalMap[rating] ?? 1;
-  const nextDue = rating === "again"
-    ? Date.now() + 10 * 60 * 1000
-    : startOfToday() + interval * DAY_IN_MS;
 
   return {
-    dueAt: nextDue,
-    interval,
-    ease: Math.min(3, Math.max(1.3, current.ease + easeChange[rating])),
-    repetitions: rating === "again" ? 0 : current.repetitions + 1,
-    lapses: current.lapses + (rating === "again" ? 1 : 0),
+    learned,
+    box: Math.max(0, current.box + (boxChange[rating] ?? 0)),
+    repetitions: current.repetitions + 1,
+    attempts: current.attempts + 1,
+    lastRating: rating,
     lastReviewedAt: Date.now()
   };
 }
@@ -464,7 +456,7 @@ function resetForm() {
 function updateStats() {
   const categories = new Set(cards.map((card) => card.category));
   totalCount.textContent = cards.length;
-  dueCount.textContent = cards.filter(isDue).length;
+  openCount.textContent = cards.filter((card) => !isLearned(card)).length;
   favoriteCount.textContent = cards.filter((card) => card.favorite).length;
   categoryCount.textContent = categories.size;
 }
@@ -475,7 +467,7 @@ function updateStudySummary() {
   const scopedCards = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
-  const dueCards = scopedCards.filter(isDue).length;
+  const openCards = scopedCards.filter((card) => !isLearned(card)).length;
   const categoryText = selectedCategory === "all" ? "" : ` in ${selectedCategory}`;
 
   if (studyMode === "learn") {
@@ -485,19 +477,20 @@ function updateStudySummary() {
     return;
   }
 
-  studySummary.textContent = dueCards === 1
-    ? "1 Karte faellig"
-    : `${dueCards} Karten faellig${categoryText}`;
+  studySummary.textContent = openCards === 1
+    ? `1 offene Karte${categoryText}`
+    : `${openCards} offene Karten${categoryText}`;
 }
 
 function updateCardReviewMeta(node, card) {
-  const dueLabel = node.querySelector(".due-label");
+  const statusLabel = node.querySelector(".status-label");
   const reviewCount = node.querySelector(".review-count");
-  const due = isDue(card);
+  const review = normalizeReviewState(card.review);
+  const learned = isLearned(card);
 
-  dueLabel.textContent = due ? "Faellig" : `Faellig ${formatDueDate(card.review.dueAt)}`;
-  dueLabel.classList.toggle("is-due", due);
-  reviewCount.textContent = `${card.review.repetitions} Wiederholungen`;
+  statusLabel.textContent = learned ? "Gelernt" : "Offen";
+  statusLabel.classList.toggle("is-learned", learned);
+  reviewCount.textContent = `${review.repetitions} Bewertungen`;
 }
 
 function updateCategoryFilter() {
@@ -541,25 +534,33 @@ function normalize(value) {
   return value.trim().toLocaleLowerCase("de-DE");
 }
 
-function isDue(card) {
-  return normalizeReviewState(card.review).dueAt <= Date.now();
+function isLearned(card) {
+  return normalizeReviewState(card.review).learned;
 }
 
-function createReviewState(dueAt) {
+function createReviewState() {
   return {
-    dueAt,
-    interval: 1,
-    ease: 2.2,
+    learned: false,
+    box: 0,
     repetitions: 0,
-    lapses: 0,
+    attempts: 0,
+    lastRating: null,
     lastReviewedAt: null
   };
 }
 
 function normalizeReviewState(review) {
+  const previousReview = review || {};
+  const legacyLearned = Boolean(previousReview.learned);
+  const learnedFromOldDueDate = previousReview.dueAt && previousReview.dueAt > Date.now();
+
   return {
-    ...createReviewState(Date.now()),
-    ...(review || {})
+    ...createReviewState(),
+    ...previousReview,
+    learned: legacyLearned || Boolean(learnedFromOldDueDate),
+    box: Number.isFinite(Number(previousReview.box)) ? Number(previousReview.box) : 0,
+    repetitions: Number.isFinite(Number(previousReview.repetitions)) ? Number(previousReview.repetitions) : 0,
+    attempts: Number.isFinite(Number(previousReview.attempts)) ? Number(previousReview.attempts) : 0
   };
 }
 
@@ -571,26 +572,6 @@ function normalizeCards(items) {
   }));
   saveCards(normalizedCards);
   return normalizedCards;
-}
-
-function formatDueDate(timestamp) {
-  const dueDate = new Date(timestamp);
-  const today = startOfToday();
-  const tomorrow = today + DAY_IN_MS;
-
-  if (timestamp < tomorrow && timestamp >= today) return "heute";
-  if (timestamp >= tomorrow && timestamp < tomorrow + DAY_IN_MS) return "morgen";
-
-  return dueDate.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit"
-  });
-}
-
-function startOfToday() {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date.getTime();
 }
 
 function initializeTimerControls() {
