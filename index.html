@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1f7a6d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Knowledge Cards">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Knowledge Cards">
+  <meta name="description" content="Eine PWA fuer Lernkarten, Spaced Repetition und Pomodoro-Fokus.">
+  <title>Knowledge Cards</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="workspace">
+      <aside class="sidebar" aria-label="Karten verwalten">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">KC</div>
+          <div>
+            <h1>Knowledge Cards</h1>
+            <p>Lernkarten, Notizen und Ideen</p>
+          </div>
+        </div>
+
+        <form id="cardForm" class="card-form">
+          <input type="hidden" id="cardId">
+
+          <label for="title">Titel</label>
+          <input id="title" name="title" type="text" placeholder="z. B. CSS Grid" required>
+
+          <label for="category">Kategorie</label>
+          <input id="category" name="category" type="text" placeholder="z. B. Frontend" required>
+
+          <label for="content">Inhalt</label>
+          <textarea id="content" name="content" rows="8" placeholder="Wichtiges Wissen hier sammeln..." required></textarea>
+
+          <label for="tags">Tags</label>
+          <input id="tags" name="tags" type="text" placeholder="html, css, layout">
+
+          <label class="check-row" for="favorite">
+            <input id="favorite" name="favorite" type="checkbox">
+            <span>Als Favorit markieren</span>
+          </label>
+
+          <div class="form-actions">
+            <button class="primary-action" type="submit" id="saveButton">Speichern</button>
+            <button class="secondary-action" type="button" id="resetButton">Zuruecksetzen</button>
+          </div>
+        </form>
+
+        <section class="pomodoro-panel" aria-label="Pomodoro Timer">
+          <div>
+            <p class="panel-kicker">Pomodoro</p>
+            <h2 id="pomodoroMode">Fokus</h2>
+          </div>
+          <div class="timer-display" id="timerDisplay" aria-live="polite">25:00</div>
+          <div class="timer-settings">
+            <label for="focusMinutes">Fokus</label>
+            <input id="focusMinutes" type="number" min="5" max="90" value="25">
+            <label for="breakMinutes">Pause</label>
+            <input id="breakMinutes" type="number" min="1" max="30" value="5">
+          </div>
+          <div class="timer-actions">
+            <button class="primary-action" id="timerStart" type="button">Start</button>
+            <button class="secondary-action" id="timerPause" type="button">Pause</button>
+            <button class="secondary-action" id="timerReset" type="button">Reset</button>
+          </div>
+          <p class="timer-note" id="timerNote">Lerne eine faellige Karte, dann bewerte sie.</p>
+        </section>
+      </aside>
+
+      <section class="content-area" aria-label="Kartenuebersicht">
+        <div class="toolbar">
+          <div class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" placeholder="Karten suchen">
+          </div>
+
+          <div class="filters">
+            <select id="categoryFilter" aria-label="Nach Kategorie filtern">
+              <option value="all">Alle Kategorien</option>
+            </select>
+            <button class="icon-button" id="favoriteFilter" type="button" aria-pressed="false" title="Nur Favoriten">
+              ★
+            </button>
+          </div>
+        </div>
+
+        <div class="stats" aria-live="polite">
+          <span><strong id="totalCount">0</strong> Karten</span>
+          <span><strong id="dueCount">0</strong> faellig</span>
+          <span><strong id="favoriteCount">0</strong> Favoriten</span>
+          <span><strong id="categoryCount">0</strong> Kategorien</span>
+        </div>
+
+        <section class="study-panel" aria-label="Spaced Repetition">
+          <div>
+            <p class="panel-kicker">Spaced Repetition</p>
+            <h2>Heute wiederholen</h2>
+          </div>
+          <button class="primary-action" id="dueFilter" type="button" aria-pressed="false">Faellige Karten</button>
+        </section>
+
+        <section id="cardsGrid" class="cards-grid" aria-label="Gespeicherte Karten"></section>
+
+        <section id="emptyState" class="empty-state" hidden>
+          <div class="empty-illustration" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <h2>Keine Karten gefunden</h2>
+          <p>Neue Karte anlegen oder Filter anpassen.</p>
+        </section>
+      </section>
+    </section>
+
+    <dialog id="deleteDialog" class="confirm-dialog">
+      <form method="dialog">
+        <h2>Karte loeschen?</h2>
+        <p id="deleteDialogText"></p>
+        <div class="dialog-actions">
+          <button class="secondary-action" value="cancel" type="submit">Abbrechen</button>
+          <button class="danger-action" value="delete" type="submit">Loeschen</button>
+        </div>
+      </form>
+    </dialog>
+  </main>
+
+  <template id="cardTemplate">
+    <article class="knowledge-card">
+      <header>
+        <div>
+          <p class="card-category"></p>
+          <h2 class="card-title"></h2>
+        </div>
+        <button class="favorite-button" type="button" title="Favorit umschalten" aria-label="Favorit umschalten">☆</button>
+      </header>
+      <div class="review-meta">
+        <span class="due-label"></span>
+        <span class="review-count"></span>
+      </div>
+      <p class="card-content"></p>
+      <div class="tag-list"></div>
+      <div class="review-actions" aria-label="Karte bewerten">
+        <button class="review-again" type="button">Nochmal</button>
+        <button class="review-hard" type="button">Schwer</button>
+        <button class="review-good" type="button">Gut</button>
+        <button class="review-easy" type="button">Einfach</button>
+      </div>
+      <footer>
+        <button class="secondary-action edit-button" type="button">Bearbeiten</button>
+        <button class="danger-action delete-button" type="button">Loeschen</button>
+      </footer>
+    </article>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
