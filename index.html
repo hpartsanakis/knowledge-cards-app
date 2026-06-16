@@ -149,12 +149,22 @@
             </div>
             <p class="panel-kicker">Vorderseite</p>
             <h2 id="studyQuestion"></h2>
+            <label class="study-response" for="studyUserAnswer">
+              <span>Deine Antwort</span>
+              <textarea id="studyUserAnswer" rows="4" placeholder="Schreibe deine Antwort, bevor du vergleichst."></textarea>
+            </label>
             <div class="study-answer" id="studyAnswer" hidden>
-              <p class="panel-kicker">Rueckseite</p>
-              <p id="studyAnswerText"></p>
+              <div>
+                <p class="panel-kicker">Deine Antwort</p>
+                <p id="studyUserAnswerText"></p>
+              </div>
+              <div>
+                <p class="panel-kicker">Rueckseite</p>
+                <p id="studyAnswerText"></p>
+              </div>
             </div>
             <div class="study-controls">
-              <button class="primary-action" id="revealAnswerButton" type="button">Antwort zeigen</button>
+              <button class="primary-action" id="revealAnswerButton" type="button">Antwort vergleichen</button>
               <button class="secondary-action" id="skipStudyButton" type="button">Ueberspringen</button>
             </div>
             <div class="study-rating" id="studyRating" hidden>

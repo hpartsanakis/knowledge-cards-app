@@ -94,6 +94,8 @@ const studyProgress = document.querySelector("#studyProgress");
 const studyCategory = document.querySelector("#studyCategory");
 const studyQuestion = document.querySelector("#studyQuestion");
 const studyAnswer = document.querySelector("#studyAnswer");
+const studyUserAnswer = document.querySelector("#studyUserAnswer");
+const studyUserAnswerText = document.querySelector("#studyUserAnswerText");
 const studyAnswerText = document.querySelector("#studyAnswerText");
 const revealAnswerButton = document.querySelector("#revealAnswerButton");
 const skipStudyButton = document.querySelector("#skipStudyButton");
@@ -106,15 +108,15 @@ resetButton.addEventListener("click", resetForm);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
 studyCategorySelect.addEventListener("change", updateStudySummary);
-studyModeSelect.addEventListener("change", updateStudySummary);
+studyModeSelect.addEventListener("change", render);
 favoriteFilter.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
   favoriteFilter.setAttribute("aria-pressed", String(showFavoritesOnly));
   render();
 });
 dueFilter.addEventListener("click", () => {
-  showDueOnly = !showDueOnly;
-  dueFilter.setAttribute("aria-pressed", String(showDueOnly));
+  showDueOnly = true;
+  studyModeSelect.value = "review";
   render();
 });
 deleteDialog.addEventListener("close", handleDeleteDialogClose);
@@ -180,6 +182,7 @@ function handleSubmit(event) {
 function render() {
   updateCategoryFilter();
   updateStudyCategoryOptions();
+  dueFilter.setAttribute("aria-pressed", String(studyModeSelect.value === "review"));
   const visibleCards = getVisibleCards();
   cardsGrid.innerHTML = "";
 
@@ -224,6 +227,7 @@ function render() {
 function getVisibleCards() {
   const searchTerm = normalize(searchInput.value);
   const selectedCategory = categoryFilter.value;
+  const studyMode = studyModeSelect.value;
 
   return cards
     .filter((card) => {
@@ -237,7 +241,7 @@ function getVisibleCards() {
       const matchesSearch = searchableText.includes(searchTerm);
       const matchesCategory = selectedCategory === "all" || card.category === selectedCategory;
       const matchesFavorite = !showFavoritesOnly || card.favorite;
-      const matchesDue = !showDueOnly || isDue(card);
+      const matchesDue = studyMode === "learn" || isDue(card);
 
       return matchesSearch && matchesCategory && matchesFavorite && matchesDue;
     })
@@ -322,6 +326,8 @@ function startStudySession() {
       ? "Keine faelligen Karten in dieser Auswahl"
       : "Noch keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
+    studyUserAnswer.value = "";
+    studyUserAnswer.hidden = true;
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
     skipStudyButton.hidden = true;
@@ -359,6 +365,8 @@ function renderStudyCard() {
     studyCategory.textContent = "";
     studyQuestion.textContent = "Lerneinheit abgeschlossen";
     studyAnswer.hidden = true;
+    studyUserAnswer.value = "";
+    studyUserAnswer.hidden = true;
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
     skipStudyButton.hidden = true;
@@ -371,15 +379,19 @@ function renderStudyCard() {
   studyCategory.textContent = card.category;
   studyQuestion.textContent = card.title;
   studyAnswerText.textContent = card.content;
+  studyUserAnswer.value = "";
+  studyUserAnswer.hidden = false;
   studyAnswer.hidden = true;
   studyRating.hidden = true;
   revealAnswerButton.hidden = false;
-  revealAnswerButton.textContent = "Antwort zeigen";
+  revealAnswerButton.textContent = "Antwort vergleichen";
   skipStudyButton.hidden = false;
+  studyUserAnswer.focus();
 }
 
 function revealStudyAnswer() {
   answerVisible = true;
+  studyUserAnswerText.textContent = studyUserAnswer.value.trim() || "Keine Antwort eingegeben.";
   studyAnswer.hidden = false;
   studyRating.hidden = false;
   revealAnswerButton.hidden = true;

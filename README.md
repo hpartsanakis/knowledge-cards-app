@@ -24,7 +24,7 @@ Die App kombiniert Active Recall mit Spaced Repetition und Pomodoro:
 
 - Eine Karte aktiv erinnern.
 - Im Lernmodus erst die Frage lesen und die Antwort selbst formulieren.
-- Danach die Rueckseite aufdecken.
+- Danach die eigene Antwort mit der Rueckseite vergleichen.
 - Danach mit Nochmal, Schwer, Gut oder Einfach bewerten.
 - Die App plant automatisch den naechsten Wiederholungstermin.
 - Mit dem Pomodoro-Timer lernst du in konzentrierten Fokus-Einheiten.

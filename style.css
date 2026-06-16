@@ -440,7 +440,22 @@ textarea:focus {
   overflow-wrap: anywhere;
 }
 
+.study-response {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.study-response textarea {
+  min-height: 112px;
+}
+
 .study-answer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   padding: 16px;
   background: #f8faf7;
   border: 1px solid var(--line);
@@ -450,6 +465,10 @@ textarea:focus {
 .study-answer[hidden],
 .study-rating[hidden] {
   display: none;
+}
+
+.study-answer div {
+  min-width: 0;
 }
 
 .study-answer p:last-child {
@@ -785,6 +804,10 @@ textarea:focus {
   }
 
   .study-rating {
+    grid-template-columns: 1fr;
+  }
+
+  .study-answer {
     grid-template-columns: 1fr;
   }
 }
