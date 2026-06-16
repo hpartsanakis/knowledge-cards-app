@@ -1,4 +1,4 @@
 window.KNOWLEDGE_CARDS_SUPABASE = {
-  url: "",
-  anonKey: ""
+  url: "https://lxuwgcoccddchruxnllc.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4dXdnY29jY2RkY2hydXhubGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MjI0NjIsImV4cCI6MjA5NzE5ODQ2Mn0.jQqcnt5rfe6MiU3gln4h1llYv6yHtsrOoEQyK1leDN0"
 };
