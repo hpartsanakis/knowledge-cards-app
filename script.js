@@ -1,6 +1,7 @@
 const STORAGE_KEY = "knowledge-cards-app.cards";
 const TIMER_KEY = "knowledge-cards-app.timer";
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const SUPABASE_TABLE = "knowledge_cards";
 
 const sampleCards = [
   {
@@ -40,6 +41,9 @@ let showFavoritesOnly = false;
 let showDueOnly = false;
 let timerState = loadTimerState();
 let timerId = null;
+let supabaseClient = null;
+let currentUser = null;
+let syncInProgress = false;
 
 const form = document.querySelector("#cardForm");
 const cardIdInput = document.querySelector("#cardId");
@@ -71,6 +75,13 @@ const breakMinutesInput = document.querySelector("#breakMinutes");
 const timerStart = document.querySelector("#timerStart");
 const timerPause = document.querySelector("#timerPause");
 const timerReset = document.querySelector("#timerReset");
+const authTitle = document.querySelector("#authTitle");
+const syncStatus = document.querySelector("#syncStatus");
+const authForm = document.querySelector("#authForm");
+const authEmail = document.querySelector("#authEmail");
+const authPassword = document.querySelector("#authPassword");
+const signUpButton = document.querySelector("#signUpButton");
+const signOutButton = document.querySelector("#signOutButton");
 
 let pendingDeleteId = "";
 
@@ -94,10 +105,14 @@ breakMinutesInput.addEventListener("change", updateTimerDurations);
 timerStart.addEventListener("click", startTimer);
 timerPause.addEventListener("click", pauseTimer);
 timerReset.addEventListener("click", resetTimer);
+authForm.addEventListener("submit", signIn);
+signUpButton.addEventListener("click", signUp);
+signOutButton.addEventListener("click", signOut);
 
 initializeTimerControls();
 render();
 registerServiceWorker();
+initializeSupabase();
 
 function handleSubmit(event) {
   event.preventDefault();
@@ -135,6 +150,7 @@ function handleSubmit(event) {
   }
 
   saveCards();
+  syncCardsToCloud();
   resetForm();
   render();
 }
@@ -237,6 +253,7 @@ function handleDeleteDialogClose() {
   }
 
   cards = cards.filter((item) => item.id !== pendingDeleteId);
+  deleteCardFromCloud(pendingDeleteId);
   pendingDeleteId = "";
   saveCards();
   resetForm();
@@ -250,6 +267,7 @@ function toggleFavorite(id) {
       : card
   ));
   saveCards();
+  syncCardsToCloud();
   render();
 }
 
@@ -263,6 +281,7 @@ function reviewCard(id, rating) {
     };
   });
   saveCards();
+  syncCardsToCloud();
   render();
 }
 
@@ -516,6 +535,197 @@ function loadCards() {
 
 function saveCards(nextCards = cards) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCards));
+}
+
+async function initializeSupabase() {
+  const config = window.KNOWLEDGE_CARDS_SUPABASE || {};
+  const isConfigured = Boolean(config.url && config.anonKey);
+
+  if (!isConfigured || !window.supabase) {
+    updateAuthUI("offline", "Supabase noch nicht konfiguriert.");
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+  updateAuthUI("offline", "Supabase bereit. Bitte einloggen.");
+
+  const { data } = await supabaseClient.auth.getSession();
+  currentUser = data.session?.user || null;
+
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null;
+    if (currentUser) {
+      loadCardsFromCloud();
+    } else {
+      updateAuthUI("offline", "Abgemeldet. Lokale Karten bleiben auf diesem Gerät.");
+    }
+    renderAuthState();
+  });
+
+  renderAuthState();
+  if (currentUser) {
+    await loadCardsFromCloud();
+  }
+}
+
+async function signIn(event) {
+  event.preventDefault();
+  if (!supabaseClient) {
+    updateAuthUI("error", "Bitte zuerst Supabase in supabase-config.js eintragen.");
+    return;
+  }
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (!email || !password) return;
+
+  updateAuthUI("offline", "Login wird geprüft...");
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    updateAuthUI("error", error.message);
+    return;
+  }
+  authPassword.value = "";
+}
+
+async function signUp() {
+  if (!supabaseClient) {
+    updateAuthUI("error", "Bitte zuerst Supabase in supabase-config.js eintragen.");
+    return;
+  }
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (!email || !password) return;
+
+  updateAuthUI("offline", "Account wird erstellt...");
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) {
+    updateAuthUI("error", error.message);
+    return;
+  }
+  authPassword.value = "";
+  updateAuthUI("online", "Account erstellt. Falls Supabase E-Mail-Bestaetigung verlangt, bitte Postfach pruefen.");
+}
+
+async function signOut() {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  renderAuthState();
+}
+
+async function loadCardsFromCloud() {
+  if (!supabaseClient || !currentUser) return;
+
+  syncInProgress = true;
+  updateAuthUI("offline", "Karten werden synchronisiert...");
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .select("*")
+    .order("updated_at", { ascending: false });
+
+  syncInProgress = false;
+
+  if (error) {
+    updateAuthUI("error", error.message);
+    return;
+  }
+
+  if (data.length === 0 && cards.length > 0) {
+    await syncCardsToCloud();
+    updateAuthUI("online", "Lokale Karten wurden in die Cloud hochgeladen.");
+    return;
+  }
+
+  cards = normalizeCards(data.map(cardFromRow));
+  saveCards();
+  render();
+  updateAuthUI("online", `${cards.length} Karten synchronisiert.`);
+}
+
+async function syncCardsToCloud() {
+  if (!supabaseClient || !currentUser || syncInProgress) return;
+
+  const rows = cards.map(cardToRow);
+  if (rows.length === 0) {
+    updateAuthUI("online", "Cloud Sync aktuell.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .upsert(rows, { onConflict: "id" });
+
+  if (error) {
+    updateAuthUI("error", error.message);
+    return;
+  }
+
+  updateAuthUI("online", "Cloud Sync aktuell.");
+}
+
+async function deleteCardFromCloud(id) {
+  if (!supabaseClient || !currentUser) return;
+
+  const { error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    updateAuthUI("error", error.message);
+  }
+}
+
+function cardToRow(card) {
+  return {
+    id: card.id,
+    user_id: currentUser.id,
+    title: card.title,
+    category: card.category,
+    content: card.content,
+    tags: card.tags,
+    favorite: card.favorite,
+    review: card.review,
+    created_at: toIsoDate(card.createdAt),
+    updated_at: toIsoDate(card.updatedAt || card.createdAt || Date.now())
+  };
+}
+
+function cardFromRow(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    content: row.content,
+    tags: row.tags || [],
+    favorite: row.favorite,
+    review: row.review,
+    createdAt: Date.parse(row.created_at),
+    updatedAt: Date.parse(row.updated_at)
+  };
+}
+
+function toIsoDate(value) {
+  const timestamp = Number(value) || Date.now();
+  return new Date(timestamp).toISOString();
+}
+
+function renderAuthState() {
+  const signedIn = Boolean(currentUser);
+  authForm.hidden = signedIn;
+  signOutButton.hidden = !signedIn;
+  authTitle.textContent = signedIn ? currentUser.email : "Nicht verbunden";
+  if (signedIn) {
+    updateAuthUI("online", "Angemeldet. Karten werden automatisch synchronisiert.");
+  }
+}
+
+function updateAuthUI(state, message) {
+  syncStatus.textContent = message;
+  syncStatus.classList.toggle("online", state === "online");
+  syncStatus.classList.toggle("error", state === "error");
 }
 
 function registerServiceWorker() {

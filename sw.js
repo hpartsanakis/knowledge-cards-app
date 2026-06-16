@@ -1,9 +1,10 @@
-const CACHE_NAME = "knowledge-cards-v1";
+const CACHE_NAME = "knowledge-cards-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./script.js",
+  "./supabase-config.js",
   "./manifest.webmanifest",
   "./assets/icons/apple-touch-icon.png",
   "./assets/icons/icon-192.png",

@@ -29,6 +29,25 @@
           </div>
         </div>
 
+        <section class="auth-panel" aria-label="Supabase Anmeldung">
+          <div>
+            <p class="panel-kicker">Cloud Sync</p>
+            <h2 id="authTitle">Nicht verbunden</h2>
+          </div>
+          <p class="sync-status" id="syncStatus">Supabase noch nicht konfiguriert.</p>
+          <form id="authForm" class="auth-form">
+            <label for="authEmail">E-Mail</label>
+            <input id="authEmail" type="email" autocomplete="email" placeholder="name@example.com">
+            <label for="authPassword">Passwort</label>
+            <input id="authPassword" type="password" autocomplete="current-password" placeholder="Mindestens 6 Zeichen">
+            <div class="auth-actions">
+              <button class="primary-action" id="signInButton" type="submit">Einloggen</button>
+              <button class="secondary-action" id="signUpButton" type="button">Registrieren</button>
+            </div>
+          </form>
+          <button class="secondary-action sign-out-button" id="signOutButton" type="button" hidden>Abmelden</button>
+        </section>
+
         <form id="cardForm" class="card-form">
           <input type="hidden" id="cardId">
 
@@ -72,7 +91,7 @@
             <button class="secondary-action" id="timerPause" type="button">Pause</button>
             <button class="secondary-action" id="timerReset" type="button">Reset</button>
           </div>
-          <p class="timer-note" id="timerNote">Lerne eine faellige Karte, dann bewerte sie.</p>
+          <p class="timer-note" id="timerNote">Lerne eine fällige Karte, dann bewerte sie.</p>
         </section>
       </aside>
 
@@ -95,7 +114,7 @@
 
         <div class="stats" aria-live="polite">
           <span><strong id="totalCount">0</strong> Karten</span>
-          <span><strong id="dueCount">0</strong> faellig</span>
+          <span><strong id="dueCount">0</strong> fällige</span>
           <span><strong id="favoriteCount">0</strong> Favoriten</span>
           <span><strong id="categoryCount">0</strong> Kategorien</span>
         </div>
@@ -105,7 +124,7 @@
             <p class="panel-kicker">Spaced Repetition</p>
             <h2>Heute wiederholen</h2>
           </div>
-          <button class="primary-action" id="dueFilter" type="button" aria-pressed="false">Faellige Karten</button>
+          <button class="primary-action" id="dueFilter" type="button" aria-pressed="false">Fällige Karten</button>
         </section>
 
         <section id="cardsGrid" class="cards-grid" aria-label="Gespeicherte Karten"></section>
@@ -124,11 +143,11 @@
 
     <dialog id="deleteDialog" class="confirm-dialog">
       <form method="dialog">
-        <h2>Karte loeschen?</h2>
+        <h2>Karte löschen?</h2>
         <p id="deleteDialogText"></p>
         <div class="dialog-actions">
           <button class="secondary-action" value="cancel" type="submit">Abbrechen</button>
-          <button class="danger-action" value="delete" type="submit">Loeschen</button>
+          <button class="danger-action" value="delete" type="submit">löschen</button>
         </div>
       </form>
     </dialog>
@@ -157,11 +176,13 @@
       </div>
       <footer>
         <button class="secondary-action edit-button" type="button">Bearbeiten</button>
-        <button class="danger-action delete-button" type="button">Loeschen</button>
+        <button class="danger-action delete-button" type="button">Löschen</button>
       </footer>
     </article>
   </template>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

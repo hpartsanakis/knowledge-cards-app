@@ -95,12 +95,15 @@ button {
   font-size: 0.92rem;
 }
 
+.auth-panel,
+.auth-form,
 .card-form,
 .pomodoro-panel {
   display: grid;
   gap: 10px;
 }
 
+.auth-form label,
 .card-form label:not(.check-row) {
   color: var(--muted);
   font-size: 0.86rem;
@@ -157,6 +160,7 @@ textarea:focus {
 .toolbar,
 .filters,
 .stats,
+.auth-actions,
 .timer-actions,
 .study-panel,
 .review-actions {
@@ -203,6 +207,7 @@ textarea:focus {
   padding: 0 14px;
 }
 
+.auth-panel,
 .pomodoro-panel {
   padding: 18px;
   background: #f8faf7;
@@ -218,11 +223,34 @@ textarea:focus {
   text-transform: uppercase;
 }
 
+.auth-panel h2,
 .pomodoro-panel h2,
 .study-panel h2 {
   margin: 0;
   font-size: 1.05rem;
   letter-spacing: 0;
+}
+
+.sync-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.sync-status.online {
+  color: var(--accent-dark);
+}
+
+.sync-status.error {
+  color: var(--danger);
+}
+
+.auth-actions .primary-action,
+.auth-actions .secondary-action,
+.sign-out-button {
+  flex: 1;
+  padding: 0 10px;
 }
 
 .timer-display {
@@ -617,6 +645,7 @@ textarea:focus {
   .toolbar,
   .filters,
   .form-actions,
+  .auth-actions,
   .timer-actions,
   .study-panel,
   .knowledge-card footer,
