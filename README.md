@@ -41,4 +41,10 @@ Die Karten bleiben lokal im Browser gespeichert.
 
 ## GitHub Pages
 
-Die Datei `.github/workflows/pages.yml` deployed die statische PWA automatisch, wenn das Repository auf GitHub liegt und GitHub Pages auf `GitHub Actions` gestellt ist.
+Die App kann ohne Build-Schritt direkt ueber GitHub Pages laufen:
+
+1. Repository auf GitHub oeffnen.
+2. `Settings` -> `Pages` oeffnen.
+3. Source auf `Deploy from a branch` stellen.
+4. Branch `main` und Ordner `/root` auswaehlen.
+5. Speichern.
