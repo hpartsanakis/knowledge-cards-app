@@ -1,6 +1,14 @@
 const STORAGE_KEY = "knowledge-cards-app.cards";
 const TIMER_KEY = "knowledge-cards-app.timer";
 const SUPABASE_TABLE = "knowledge_cards";
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const LEITNER_INTERVALS = {
+  1: 0,
+  2: 2,
+  3: 7,
+  4: 14,
+  5: 35
+};
 
 const sampleCards = [
   {
@@ -233,7 +241,7 @@ function getVisibleCards() {
       const matchesSearch = searchableText.includes(searchTerm);
       const matchesCategory = selectedCategory === "all" || card.category === selectedCategory;
       const matchesFavorite = !showFavoritesOnly || card.favorite;
-      const matchesMode = studyMode === "learn" || !isLearned(card);
+      const matchesMode = studyMode === "learn" || isReadyToReview(card);
 
       return matchesSearch && matchesCategory && matchesFavorite && matchesMode;
     })
@@ -316,7 +324,7 @@ function startStudySession() {
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
     studyQuestion.textContent = studyModeSelect.value === "normal"
-      ? "Keine offenen Karten in dieser Auswahl"
+      ? "Keine Karte ist gerade bereit"
       : "Noch keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
     studyUserAnswer.value = "";
@@ -345,7 +353,7 @@ function getStudyQueue() {
   ));
 
   return cardsInCategory
-    .filter((card) => studyMode === "learn" || !isLearned(card))
+    .filter((card) => studyMode === "learn" || isReadyToReview(card))
     .sort((a, b) => normalizeReviewState(a.review).box - normalizeReviewState(b.review).box);
 }
 
@@ -429,17 +437,12 @@ function scrollStudySessionIntoView() {
 
 function calculateCardStatus(review, rating) {
   const current = normalizeReviewState(review);
-  const learned = rating === "good" || rating === "easy";
-  const boxChange = {
-    again: -1,
-    hard: 0,
-    good: 1,
-    easy: 2
-  };
+  const success = rating === "good" || rating === "easy";
+  const nextBox = success ? Math.min(5, current.box + 1) : 1;
 
   return {
-    learned,
-    box: Math.max(0, current.box + (boxChange[rating] ?? 0)),
+    box: nextBox,
+    nextReviewAt: calculateNextReviewAt(nextBox, success),
     repetitions: current.repetitions + 1,
     attempts: current.attempts + 1,
     lastRating: rating,
@@ -456,7 +459,7 @@ function resetForm() {
 function updateStats() {
   const categories = new Set(cards.map((card) => card.category));
   totalCount.textContent = cards.length;
-  openCount.textContent = cards.filter((card) => !isLearned(card)).length;
+  openCount.textContent = cards.filter(isReadyToReview).length;
   favoriteCount.textContent = cards.filter((card) => card.favorite).length;
   categoryCount.textContent = categories.size;
 }
@@ -467,7 +470,7 @@ function updateStudySummary() {
   const scopedCards = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
-  const openCards = scopedCards.filter((card) => !isLearned(card)).length;
+  const openCards = scopedCards.filter(isReadyToReview).length;
   const categoryText = selectedCategory === "all" ? "" : ` in ${selectedCategory}`;
 
   if (studyMode === "learn") {
@@ -478,19 +481,19 @@ function updateStudySummary() {
   }
 
   studySummary.textContent = openCards === 1
-    ? `1 offene Karte${categoryText}`
-    : `${openCards} offene Karten${categoryText}`;
+    ? `1 Karte bereit${categoryText}`
+    : `${openCards} Karten bereit${categoryText}`;
 }
 
 function updateCardReviewMeta(node, card) {
   const statusLabel = node.querySelector(".status-label");
   const reviewCount = node.querySelector(".review-count");
   const review = normalizeReviewState(card.review);
-  const learned = isLearned(card);
+  const ready = isReadyToReview(card);
 
-  statusLabel.textContent = learned ? "Gelernt" : "Offen";
-  statusLabel.classList.toggle("is-learned", learned);
-  reviewCount.textContent = `${review.repetitions} Bewertungen`;
+  statusLabel.textContent = `Fach ${review.box}`;
+  statusLabel.classList.toggle("is-learned", !ready);
+  reviewCount.textContent = ready ? "Bereit" : `Wieder ${formatReviewDate(review.nextReviewAt)}`;
 }
 
 function updateCategoryFilter() {
@@ -534,14 +537,14 @@ function normalize(value) {
   return value.trim().toLocaleLowerCase("de-DE");
 }
 
-function isLearned(card) {
-  return normalizeReviewState(card.review).learned;
+function isReadyToReview(card) {
+  return normalizeReviewState(card.review).nextReviewAt <= Date.now();
 }
 
 function createReviewState() {
   return {
-    learned: false,
-    box: 0,
+    box: 1,
+    nextReviewAt: Date.now(),
     repetitions: 0,
     attempts: 0,
     lastRating: null,
@@ -552,16 +555,45 @@ function createReviewState() {
 function normalizeReviewState(review) {
   const previousReview = review || {};
   const legacyLearned = Boolean(previousReview.learned);
-  const learnedFromOldDueDate = previousReview.dueAt && previousReview.dueAt > Date.now();
+  const previousBox = Number.isFinite(Number(previousReview.box)) ? Number(previousReview.box) : 1;
+  const baseBox = Math.min(5, Math.max(1, previousBox));
+  const box = legacyLearned ? Math.max(2, baseBox) : baseBox;
+  const nextReviewAt = Number(previousReview.nextReviewAt)
+    || Number(previousReview.dueAt)
+    || (legacyLearned ? calculateNextReviewAt(Math.max(2, box), true) : Date.now());
 
   return {
     ...createReviewState(),
     ...previousReview,
-    learned: legacyLearned || Boolean(learnedFromOldDueDate),
-    box: Number.isFinite(Number(previousReview.box)) ? Number(previousReview.box) : 0,
+    box,
+    nextReviewAt,
     repetitions: Number.isFinite(Number(previousReview.repetitions)) ? Number(previousReview.repetitions) : 0,
     attempts: Number.isFinite(Number(previousReview.attempts)) ? Number(previousReview.attempts) : 0
   };
+}
+
+function calculateNextReviewAt(box, success) {
+  if (!success) return Date.now();
+  return startOfToday() + LEITNER_INTERVALS[box] * DAY_IN_MS;
+}
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function formatReviewDate(timestamp) {
+  const today = startOfToday();
+  const tomorrow = today + DAY_IN_MS;
+
+  if (timestamp < tomorrow) return "heute";
+  if (timestamp < tomorrow + DAY_IN_MS) return "morgen";
+
+  return new Date(timestamp).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit"
+  });
 }
 
 function normalizeCards(items) {

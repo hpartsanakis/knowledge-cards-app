@@ -9,7 +9,9 @@ Eine kleine Vanilla-HTML/CSS/JS-App zum Erstellen, Lesen, Bearbeiten und Loesche
 - Kategorie-Filter
 - Favoriten-Filter
 - Echter Karteikarten-Testmodus mit verdeckter Antwort
-- Normal-Modus zeigt nur offene Karten, Anlernen-Modus zeigt alle Karten
+- Klassisches Leitner-System mit 5 Fächern
+- Normal-Modus zeigt nur Karten, die nach Fach-Rhythmus bereit sind
+- Anlernen-Modus zeigt alle Karten
 - Pomodoro-Timer mit Fokus- und Pausenzeit
 - PWA-ready fuer iPhone Home Screen und Offline-Nutzung
 - Optionaler Supabase Sync fuer MacBook und iPhone
@@ -18,15 +20,24 @@ Eine kleine Vanilla-HTML/CSS/JS-App zum Erstellen, Lesen, Bearbeiten und Loesche
 
 ## Lernmethode
 
-Die App kombiniert Active Recall mit Pomodoro:
+Die App kombiniert Active Recall, Leitner-Fächer und Pomodoro:
 
 - Eine Karte aktiv erinnern.
 - Im Lernmodus erst die Frage lesen und die Antwort selbst formulieren.
 - Danach die eigene Antwort mit der Rueckseite vergleichen.
 - Danach mit Nicht gewusst, Unsicher, Gewusst oder Sehr sicher bewerten.
-- Gewusste Karten verschwinden aus dem Normal-Modus.
+- Gewusste Karten wandern ein Fach weiter und verschwinden bis zum naechsten Lerntermin aus dem Normal-Modus.
+- Nicht gewusste Karten wandern zurueck in Fach 1.
 - Im Anlernen-Modus bleiben alle Karten sichtbar.
 - Mit dem Pomodoro-Timer lernst du in konzentrierten Fokus-Einheiten.
+
+## Leitner-Faecher
+
+- Fach 1: sofort bzw. taeglich
+- Fach 2: alle 2 Tage
+- Fach 3: woechentlich
+- Fach 4: alle 2 Wochen
+- Fach 5: alle 5 Wochen
 
 ## Start
 
