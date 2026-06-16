@@ -89,6 +89,7 @@ const startStudyButton = document.querySelector("#startStudyButton");
 const studySession = document.querySelector("#studySession");
 const studySummary = document.querySelector("#studySummary");
 const studyCategorySelect = document.querySelector("#studyCategorySelect");
+const studyModeSelect = document.querySelector("#studyModeSelect");
 const studyProgress = document.querySelector("#studyProgress");
 const studyCategory = document.querySelector("#studyCategory");
 const studyQuestion = document.querySelector("#studyQuestion");
@@ -105,6 +106,7 @@ resetButton.addEventListener("click", resetForm);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
 studyCategorySelect.addEventListener("change", updateStudySummary);
+studyModeSelect.addEventListener("change", updateStudySummary);
 favoriteFilter.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
   favoriteFilter.setAttribute("aria-pressed", String(showFavoritesOnly));
@@ -316,7 +318,9 @@ function startStudySession() {
     studySession.hidden = false;
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
-    studyQuestion.textContent = "Noch keine Karten vorhanden";
+    studyQuestion.textContent = studyModeSelect.value === "review"
+      ? "Keine faelligen Karten in dieser Auswahl"
+      : "Noch keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
     studyRating.hidden = true;
     revealAnswerButton.hidden = true;
@@ -334,18 +338,18 @@ function startStudySession() {
 
 function getStudyQueue() {
   const selectedCategory = studyCategorySelect.value;
+  const studyMode = studyModeSelect.value;
   const cardsInCategory = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
-  const dueCards = cardsInCategory
-    .filter(isDue)
-    .sort((a, b) => a.review.dueAt - b.review.dueAt);
 
-  if (dueCards.length > 0) {
-    return dueCards;
+  if (studyMode === "learn") {
+    return [...cardsInCategory].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
   }
 
-  return [...cardsInCategory].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+  return cardsInCategory
+    .filter(isDue)
+    .sort((a, b) => a.review.dueAt - b.review.dueAt);
 }
 
 function renderStudyCard() {
@@ -455,11 +459,19 @@ function updateStats() {
 
 function updateStudySummary() {
   const selectedCategory = studyCategorySelect.value;
+  const studyMode = studyModeSelect.value;
   const scopedCards = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
   const dueCards = scopedCards.filter(isDue).length;
   const categoryText = selectedCategory === "all" ? "" : ` in ${selectedCategory}`;
+
+  if (studyMode === "learn") {
+    studySummary.textContent = scopedCards.length === 1
+      ? `1 Karte zum Anlernen${categoryText}`
+      : `${scopedCards.length} Karten zum Anlernen${categoryText}`;
+    return;
+  }
 
   studySummary.textContent = dueCards === 1
     ? "1 Karte faellig"

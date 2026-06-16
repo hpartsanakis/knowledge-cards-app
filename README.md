@@ -11,6 +11,7 @@ Eine kleine Vanilla-HTML/CSS/JS-App zum Erstellen, Lesen, Bearbeiten und Loesche
 - Spaced Repetition mit Bewertungen: Nochmal, Schwer, Gut, Einfach
 - Anzeige faelliger Karten
 - Echter Karteikarten-Testmodus mit verdeckter Antwort
+- Wiederholen-Modus zeigt nur faellige Karten, Anlernen-Modus zeigt die ganze Auswahl
 - Pomodoro-Timer mit Fokus- und Pausenzeit
 - PWA-ready fuer iPhone Home Screen und Offline-Nutzung
 - Optionaler Supabase Sync fuer MacBook und iPhone
