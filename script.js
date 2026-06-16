@@ -113,8 +113,8 @@ form.addEventListener("submit", handleSubmit);
 resetButton.addEventListener("click", resetForm);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
-studyCategorySelect.addEventListener("change", updateStudySummary);
-studyModeSelect.addEventListener("change", render);
+studyCategorySelect?.addEventListener("change", updateStudySummary);
+studyModeSelect?.addEventListener("change", render);
 favoriteFilter.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
   favoriteFilter.setAttribute("aria-pressed", String(showFavoritesOnly));
@@ -227,7 +227,7 @@ function render() {
 function getVisibleCards() {
   const searchTerm = normalize(searchInput.value);
   const selectedCategory = categoryFilter.value;
-  const studyMode = studyModeSelect.value;
+  const studyMode = getStudyMode();
 
   return cards
     .filter((card) => {
@@ -323,7 +323,7 @@ function startStudySession() {
     studySession.hidden = false;
     studyProgress.textContent = "0 / 0";
     studyCategory.textContent = "";
-    studyQuestion.textContent = studyModeSelect.value === "normal"
+    studyQuestion.textContent = getStudyMode() === "normal"
       ? "Keine Karte ist gerade bereit"
       : "Noch keine Karten in dieser Auswahl";
     studyAnswer.hidden = true;
@@ -346,8 +346,8 @@ function startStudySession() {
 }
 
 function getStudyQueue() {
-  const selectedCategory = studyCategorySelect.value;
-  const studyMode = studyModeSelect.value;
+  const selectedCategory = getStudyCategory();
+  const studyMode = getStudyMode();
   const cardsInCategory = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
@@ -465,8 +465,8 @@ function updateStats() {
 }
 
 function updateStudySummary() {
-  const selectedCategory = studyCategorySelect.value;
-  const studyMode = studyModeSelect.value;
+  const selectedCategory = getStudyCategory();
+  const studyMode = getStudyMode();
   const scopedCards = cards.filter((card) => (
     selectedCategory === "all" || card.category === selectedCategory
   ));
@@ -512,6 +512,8 @@ function updateCategoryFilter() {
 }
 
 function updateStudyCategoryOptions() {
+  if (!studyCategorySelect) return;
+
   const currentValue = studyCategorySelect.value;
   const categories = [...new Set(cards.map((card) => card.category))].sort((a, b) => a.localeCompare(b));
 
@@ -524,6 +526,14 @@ function updateStudyCategoryOptions() {
   });
 
   studyCategorySelect.value = categories.includes(currentValue) ? currentValue : "all";
+}
+
+function getStudyCategory() {
+  return studyCategorySelect?.value || "all";
+}
+
+function getStudyMode() {
+  return studyModeSelect?.value || "normal";
 }
 
 function parseTags(value) {
