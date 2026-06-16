@@ -1,4 +1,4 @@
-const CACHE_NAME = "knowledge-cards-v2";
+const CACHE_NAME = "knowledge-cards-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -32,12 +32,14 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => (
-      cachedResponse || fetch(event.request).then((networkResponse) => {
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-        return networkResponse;
-      }).catch(() => caches.match("./index.html"))
+    fetch(event.request).then((networkResponse) => {
+      const responseClone = networkResponse.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+      return networkResponse;
+    }).catch(() => (
+      caches.match(event.request).then((cachedResponse) => (
+        cachedResponse || caches.match("./index.html")
+      ))
     ))
   );
 });
